@@ -62,51 +62,54 @@
   </footer>
 
   <script>
-    // ---------- Theme toggle logic ----------
-    const toggle = document.getElementById('theme-toggle');
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const stored = localStorage.getItem('theme'); // 'dark' | 'light' | null
+  // ---------- Theme toggle logic (default: DARK) ----------
+  const toggle = document.getElementById('theme-toggle');
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const stored = localStorage.getItem('theme'); // 'dark' | 'light' | null
 
-    // Helper to apply theme
-    function applyTheme(theme) {
-      if (theme === 'dark') {
-        document.documentElement.classList.add('theme-dark');
-        document.documentElement.classList.remove('theme-light');
-        toggle.setAttribute('aria-pressed', 'true');
-        // show moon, hide sun
-        document.getElementById('icon-moon').style.display = 'inline-block';
-        document.getElementById('icon-sun').style.display = 'none';
-      } else {
-        document.documentElement.classList.add('theme-light');
-        document.documentElement.classList.remove('theme-dark');
-        toggle.setAttribute('aria-pressed', 'false');
-        document.getElementById('icon-moon').style.display = 'none';
-        document.getElementById('icon-sun').style.display = 'inline-block';
-      }
-    }
-
-    // initialize theme: stored -> system preference -> light default
-    if (stored === 'dark' || (stored === null && prefersDark)) {
-      applyTheme('dark');
+  function applyTheme(theme) {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('theme-dark');
+      document.documentElement.classList.remove('theme-light');
+      toggle.setAttribute('aria-pressed', 'true');
+      document.getElementById('icon-moon').style.display = 'inline-block';
+      document.getElementById('icon-sun').style.display = 'none';
     } else {
-      applyTheme('light');
+      document.documentElement.classList.add('theme-light');
+      document.documentElement.classList.remove('theme-dark');
+      toggle.setAttribute('aria-pressed', 'false');
+      document.getElementById('icon-moon').style.display = 'none';
+      document.getElementById('icon-sun').style.display = 'inline-block';
     }
+  }
 
-    // toggle on click
-    toggle.addEventListener('click', () => {
-      const isDark = document.documentElement.classList.contains('theme-dark');
-      const next = isDark ? 'light' : 'dark';
-      applyTheme(next);
-      localStorage.setItem('theme', next);
-    });
+  // Initialization logic:
+  // Priority: stored choice -> default to DARK (ignore system unless stored === 'light')
+  if (stored === 'light') {
+    applyTheme('light');
+  } else {
+    // either stored === 'dark' or no stored value => default to dark
+    applyTheme('dark');
+    // if there was no stored value, persist dark as default
+    if (!stored) localStorage.setItem('theme', 'dark');
+  }
 
-    // optional: react to system changes if user hasn't explicitly chosen
-    window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-      if (!localStorage.getItem('theme')) { // only if user didn't pick
-        applyTheme(e.matches ? 'dark' : 'light');
-      }
-    });
-    // ---------- End theme logic ----------
-  </script>
+  // Toggle button
+  toggle.addEventListener('click', () => {
+    const isDark = document.documentElement.classList.contains('theme-dark');
+    const next = isDark ? 'light' : 'dark';
+    applyTheme(next);
+    localStorage.setItem('theme', next);
+  });
+
+  // If you want to respect system changes only when user hasn't chosen:
+  // (not needed now because default is dark and we persist choice)
+  window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    if (!localStorage.getItem('theme')) {
+      applyTheme(e.matches ? 'dark' : 'light');
+    }
+  });
+  // ---------- End theme logic ----------
+</script>
 </body>
 </html>
