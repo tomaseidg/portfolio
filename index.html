@@ -1,21 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thomas' Portfolio</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Thomas' Portfolio</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
+  <header class="topbar">
+    <div class="brand">Thomas Eid — Cloud & DevOps Engineer</div>
+
+    <!-- Theme toggle button (accessible) -->
+    <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode" aria-pressed="false" title="Toggle dark/light">
+      <!-- moon icon -->
+      <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+      </svg>
+      <!-- sun icon (hidden when dark) -->
+      <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"></circle>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
+      </svg>
+    </button>
+  </header>
+
+  <main class="container">
     <div class="container">
         <div class="profile">
             <img src="assets/profile.jpg" alt="Thomas" class="profile-img">
             <div class="text">
                 <h1>Thomas Eid</h1>
                 <p>Cloud & DevOps Engineer</p>
-                <p>Coming Soon .....</p>
+            </div>
+            <br>
+
+            <!-- Contact Section -->
+            <div class="contact">
+                <h2>Let's Connect</h2>
+                <div class="social-links">
+                    <a href="https://www.linkedin.com/in/tomaseg" target="_blank" class="linkedin">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                    <a href="https://github.com/tomaseidg" target="_blank" class="github">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="mailto:thomas.eid.g@gmail.com" class="email">
+                        <i class="fas fa-envelope"></i>
+                    </a>
+                    <a href="https://wa.me/201288818834" target="_blank" class="whatsapp">
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
+  </main>
+  <footer class="footer">
+    <p>Powered by<a href="https://www.youtube.com/@thomas_eid" target="_blank" rel="noopener noreferrer">ThomasLab's</a>
+    </p>
+  </footer>
+
+  <script>
+    // ---------- Theme toggle logic ----------
+    const toggle = document.getElementById('theme-toggle');
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const stored = localStorage.getItem('theme'); // 'dark' | 'light' | null
+
+    // Helper to apply theme
+    function applyTheme(theme) {
+      if (theme === 'dark') {
+        document.documentElement.classList.add('theme-dark');
+        document.documentElement.classList.remove('theme-light');
+        toggle.setAttribute('aria-pressed', 'true');
+        // show moon, hide sun
+        document.getElementById('icon-moon').style.display = 'inline-block';
+        document.getElementById('icon-sun').style.display = 'none';
+      } else {
+        document.documentElement.classList.add('theme-light');
+        document.documentElement.classList.remove('theme-dark');
+        toggle.setAttribute('aria-pressed', 'false');
+        document.getElementById('icon-moon').style.display = 'none';
+        document.getElementById('icon-sun').style.display = 'inline-block';
+      }
+    }
+
+    // initialize theme: stored -> system preference -> light default
+    if (stored === 'dark' || (stored === null && prefersDark)) {
+      applyTheme('dark');
+    } else {
+      applyTheme('light');
+    }
+
+    // toggle on click
+    toggle.addEventListener('click', () => {
+      const isDark = document.documentElement.classList.contains('theme-dark');
+      const next = isDark ? 'light' : 'dark';
+      applyTheme(next);
+      localStorage.setItem('theme', next);
+    });
+
+    // optional: react to system changes if user hasn't explicitly chosen
+    window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+      if (!localStorage.getItem('theme')) { // only if user didn't pick
+        applyTheme(e.matches ? 'dark' : 'light');
+      }
+    });
+    // ---------- End theme logic ----------
+  </script>
 </body>
 </html>
