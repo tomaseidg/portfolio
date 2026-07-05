@@ -412,19 +412,46 @@
       localStorage.setItem('theme', next);
     });
 
-    /* ================= SPA ROUTING LOGIC ================= */
-    
-    // Helper to generate Cloud Video Boxes
-    let cloudBoxesHTML = '';
-    for(let i=1; i<=18; i++) {
-      cloudBoxesHTML += `
-        <a href="#" class="project-card" style="padding: 20px 10px;">
-          <i class="fab fa-youtube" style="font-size: 2rem; color: #ff0000;"></i>
-          <h3 style="font-size: 1rem;">AWS Lab ${i}</h3>
-          <p style="font-size: 0.75rem;">CCP & SAA Practice</p>
-        </a>`;
+    /* ================= DATA ARRAYS ================= */
+    // Add your video titles and URLs here. 
+    // If the URL is empty or "#", it will stay on the page.
+    const awsLabs = [
+        { title: "Multi-Region Café Web App", url: "https://youtu.be/506mmRaa0ZU?si=sNG2b22GqHbISfpA", desc: "CCP & SAA Practice" },
+        { title: "Amazon RDS Database", url: "https://youtu.be/cgclU0LNiF0?si=HEUVoc8xRjVeKl2m", desc: "CCP & SAA Practice" },
+        { title: "IAM Users, Groups & Policies", url: "https://youtu.be/RyrrDvr8Ec4?si=wv-oKl3RoNrBCkeJ", desc: "CCP & SAA Practice" },
+        { title: "VPC with Public & Private Subnets", url: "https://youtu.be/UYU9-FMe99A?si=6FDNMPDhe239nZ2P", desc: "CCP & SAA Practice" },
+        { title: "Amazon S3 + DR & Lifecycle Policies", url: "https://youtu.be/v6gAABrkotI?si=Kw6PZIWKnlvXDiCi", desc: "CCP & SAA Practice" },
+        { title: "AMount EFS to EC2", url: "https://youtu.be/z_NP4wSmtL4?si=4CDQFBFAcphg_Qbn", desc: "CCP & SAA Practice" },
+        { title: "Migrate MariaDB from EC2 to RDS", url: "https://youtu.be/xXqTXioEJyQ?si=6Cxtu5BcYx3ieoeX", desc: "CCP & SAA Practice" },
+        { title: "Bastion Host, NAT Gateway", url: "https://youtu.be/UjF65JTfBLw?si=Gj3Nq2kzdDdmJmta", desc: "CCP & SAA Practice" },
+        { title: "Connect Two VPCs + Route Tables", url: "https://youtu.be/pU8MWXRSEps?si=F42RuNtLWpyhyNag", desc: "CCP & SAA Practice" },
+        { title: "Amazon Cognito (User Pool + Identity Pool)", url: "https://youtu.be/Z_-gF9e6jw4?si=1yu08CpYVd0g4H5s", desc: "CCP & SAA Practice" },
+        { title: "AWS KMS Encryption ", url: "https://youtu.be/q9X7Q66rAMw?si=AiJGwkn1tVcWPmas", desc: "CCP & SAA Practice" },
+        { title: "Highly Available Environment", url: "https://youtu.be/FMnjsUfFrXQ?si=ZxbOKLat9S-0u0xj", desc: "CCP & SAA Practice" },
+        { title: "ALB + Auto Scaling", url: "https://youtu.be/J3Tr1QpKJLM?si=Gs5l5HuIVy2b1V1v", desc: "CCP & SAA Practice" },
+        { title: "AWS CloudFormation", url: "https://youtu.be/hrnW_IdI2sc?si=7WoEmZuVpJ6Be--s", desc: "CCP & SAA Practice" },
+        { title: "Automating Infrastructure Deployment ", url: "https://youtu.be/VbkCazI6uQg?si=gUEWmaFo_bGV0xnn", desc: "CCP & SAA Practice" },
+        { title: "Amazon SQS, SNS & S3", url: "https://youtu.be/stPksrX1PSY?si=YcMivOzuYhEG2QZb", desc: "CCP & SAA Practice" },
+        { title: "Serverless Inventory System", url: "https://youtu.be/baRSy5KJaYE?si=B3GYG11mLu7FJHvB", desc: "CCP & SAA Practice" },
+        { title: "Serverless Daily Sales Report", url: "Serverless Daily Sales Report", desc: "CCP & SAA Practice" },
+    ];
+
+    function generateCloudVideos() {
+      let html = '';
+      awsLabs.forEach((lab) => {
+          let targetAttr = (lab.url !== '#' && lab.url !== '') ? 'target="_blank"' : '';
+          html += `
+          <a href="${lab.url}" ${targetAttr} class="project-card" style="padding: 20px 10px; text-decoration: none;">
+            <i class="fab fa-youtube" style="font-size: 2rem; color: #ff0000;"></i>
+            <h3 style="font-size: 1rem; color: var(--text);">${lab.title}</h3>
+            <p style="font-size: 0.75rem; color: var(--muted);">${lab.desc}</p>
+          </a>`;
+      });
+      return html;
     }
 
+    /* ================= SPA ROUTING LOGIC ================= */
+    
     // Define the HTML templates for each view
     const views = {
       home: `
@@ -458,6 +485,40 @@
         </div>
       `,
 
+      private_repo: `
+        <div class="view-header">
+          <button onclick="navigate('home')" class="back-btn"><i class="fas fa-arrow-left"></i> Back</button>
+          <h2 class="projects-header">Repository Access Status</h2>
+        </div>
+        
+        <div class="project-details" style="background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 50px 30px; text-align: center; animation: fadeIn 0.4s ease;">
+          
+          <i class="fas fa-lock" style="font-size: 3.5rem; color: var(--muted); margin-bottom: 20px;"></i>
+          
+          <h3 style="color: var(--text); margin-bottom: 15px; font-size: 1.6rem;">
+            Custom Enterprise Solution
+          </h3>
+          
+          <p style="color: var(--muted); line-height: 1.8; margin-bottom: 35px; font-size: 1.05rem; max-width: 650px; margin-left: auto; margin-right: auto;">
+            This repository is currently private. The project was custom-designed and meticulously built exclusively to meet specific enterprise requirements and business workflows.<br><br>
+            
+            <span style="color: var(--text); font-weight: 500;">
+              <i class="fas fa-handshake" style="color: var(--accent); margin-right: 8px;"></i> Looking for a similar system?
+            </span><br>
+            If you need help building a solution tailored to your unique business needs, I would be more than happy to assist you! Please feel free to reach out to me through any of the channels below.
+          </p>
+
+          <div class="social-links" style="margin-top: 25px; padding-top: 25px; border-top: 1px solid var(--border); display: flex; justify-content: center; gap: 15px;">
+            <a href="https://www.linkedin.com/in/tomaseg" target="_blank" title="LinkedIn" style="width: 45px; height: 45px; font-size: 1.4rem;"><i class="fab fa-linkedin"></i></a>
+            <a href="https://github.com/tomaseidg" target="_blank" title="GitHub" style="width: 45px; height: 45px; font-size: 1.4rem;"><i class="fab fa-github"></i></a>
+            <a href="https://www.youtube.com/@thomas_eid" target="_blank" title="YouTube" style="width: 45px; height: 45px; font-size: 1.4rem;"><i class="fab fa-youtube"></i></a>
+            <a href="mailto:thomas.eid.g@gmail.com" title="Email" style="width: 45px; height: 45px; font-size: 1.4rem;"><i class="fas fa-envelope"></i></a>
+            <a href="https://wa.me/201288818834" target="_blank" title="WhatsApp" style="width: 45px; height: 45px; font-size: 1.4rem;"><i class="fab fa-whatsapp"></i></a>
+          </div>
+
+        </div>
+      `,
+
       cloud: `
         <div class="view-header">
           <button onclick="navigate('home')" class="back-btn"><i class="fas fa-arrow-left"></i> Back</button>
@@ -465,7 +526,7 @@
         </div>
         <p style="color: var(--muted); margin-bottom: 20px;">AWS Certified Cloud Practitioner (CCP) & Solutions Architect Associate (SAA) Hands-on Labs.</p>
         <div class="projects-grid grid-small">
-          ${cloudBoxesHTML}
+          ${generateCloudVideos()}
         </div>
       `,
 
@@ -475,22 +536,22 @@
           <h2 class="projects-header">DevOps Projects</h2>
         </div>
         <div class="projects-grid">
-          <a href="#" target="_blank" class="project-card">
+          <a href="javascript:void(0)" onclick="navigate('private_repo')" class="project-card">
             <i class="fab fa-github"></i>
             <h3>DevOps Repo 1</h3>
             <p>CI/CD Pipeline Automation</p>
           </a>
-          <a href="#" target="_blank" class="project-card">
+          <a href="javascript:void(0)" onclick="navigate('private_repo')" class="project-card">
             <i class="fab fa-github"></i>
             <h3>DevOps Repo 2</h3>
             <p>Infrastructure as Code</p>
           </a>
-          <a href="#" target="_blank" class="project-card">
+          <a href="javascript:void(0)" onclick="navigate('private_repo')" class="project-card">
             <i class="fab fa-github"></i>
             <h3>DevOps Repo 3</h3>
             <p>Containerization & Orchestration</p>
           </a>
-          <a href="#" target="_blank" class="project-card">
+          <a href="javascript:void(0)" onclick="navigate('private_repo')" class="project-card">
             <i class="fab fa-github"></i>
             <h3>DevOps Repo 4</h3>
             <p>Monitoring & Logging Systems</p>
@@ -513,7 +574,7 @@
           
           <div onclick="navigate('termination')" class="project-card">
             <i class="fas fa-user-times"></i>
-            <h3>Termination Automation System</h3>
+            <h3>Offboarding Automation System</h3>
             <p>SharePoint & Active Directory integrated workflow for automated offboarding.</p>
           </div>
 
@@ -591,7 +652,7 @@
             <a href="#" style="flex: 1; text-align: center; padding: 12px 20px; border-radius: 8px; background: var(--card-hover); color: var(--accent); text-decoration: none; border: 1px solid var(--accent); font-weight: 600; display: inline-block;">
               <i class="fas fa-file-alt" style="margin-right: 8px;"></i> Full Documentation
             </a>
-            <a href="#" style="flex: 1; text-align: center; padding: 12px 20px; border-radius: 8px; background: var(--text); color: var(--bg); text-decoration: none; font-weight: 600; display: inline-block;">
+            <a href="javascript:void(0)" onclick="navigate('private_repo')" style="flex: 1; text-align: center; padding: 12px 20px; border-radius: 8px; background: var(--text); color: var(--bg); text-decoration: none; font-weight: 600; display: inline-block;">
               <i class="fab fa-github" style="margin-right: 8px;"></i> View Code on GitHub
             </a>
           </div>
@@ -658,7 +719,7 @@
             <a href="#" style="flex: 1; text-align: center; padding: 12px 20px; border-radius: 8px; background: var(--card-hover); color: var(--accent); text-decoration: none; border: 1px solid var(--accent); font-weight: 600; display: inline-block;">
               <i class="fas fa-file-alt" style="margin-right: 8px;"></i> Full Documentation
             </a>
-            <a href="#" style="flex: 1; text-align: center; padding: 12px 20px; border-radius: 8px; background: var(--text); color: var(--bg); text-decoration: none; font-weight: 600; display: inline-block;">
+            <a href="https://medium.com/@tomaseg/offboarding-automation-system-documentation-eaca6653c79f?sharedUserId=tomaseg" target="_blank" style="flex: 1; text-align: center; padding: 12px 20px; border-radius: 8px; background: var(--text); color: var(--bg); text-decoration: none; font-weight: 600; display: inline-block;">
               <i class="fab fa-github" style="margin-right: 8px;"></i> View Code
             </a>
           </div>
@@ -709,7 +770,7 @@
             <a href="https://medium.com/@tomaseg/device-inventory-app-full-source-code-documentation-79302e6bf484?sharedUserId=tomaseg" target="_blank" style="flex: 1; text-align: center; padding: 12px 20px; border-radius: 8px; background: var(--card-hover); color: var(--accent); text-decoration: none; border: 1px solid var(--accent); font-weight: 600; display: inline-block;">
               <i class="fab fa-medium" style="margin-right: 8px;"></i> Full Documentation on Medium
             </a>
-            <a href="#" target="_blank" style="flex: 1; text-align: center; padding: 12px 20px; border-radius: 8px; background: var(--text); color: var(--bg); text-decoration: none; font-weight: 600; display: inline-block;">
+            <a href="javascript:void(0)" onclick="navigate('private_repo')" style="flex: 1; text-align: center; padding: 12px 20px; border-radius: 8px; background: var(--text); color: var(--bg); text-decoration: none; font-weight: 600; display: inline-block;">
               <i class="fab fa-github" style="margin-right: 8px;"></i> View Code on GitHub
             </a>
           </div>
@@ -760,7 +821,7 @@
             <a href="#" target="_blank" style="flex: 1; text-align: center; padding: 12px 20px; border-radius: 8px; background: var(--card-hover); color: var(--accent); text-decoration: none; border: 1px solid var(--accent); font-weight: 600; display: inline-block;">
               <i class="fas fa-book" style="margin-right: 8px;"></i> Technical Specs
             </a>
-            <a href="#" target="_blank" style="flex: 1; text-align: center; padding: 12px 20px; border-radius: 8px; background: var(--text); color: var(--bg); text-decoration: none; font-weight: 600; display: inline-block;">
+            <a href="javascript:void(0)" onclick="navigate('private_repo')" style="flex: 1; text-align: center; padding: 12px 20px; border-radius: 8px; background: var(--text); color: var(--bg); text-decoration: none; font-weight: 600; display: inline-block;">
               <i class="fab fa-github" style="margin-right: 8px;"></i> Source Code
             </a>
           </div>
@@ -811,7 +872,7 @@
             <a href="#" style="flex: 1; text-align: center; padding: 12px 20px; border-radius: 8px; background: var(--card-hover); color: var(--accent); text-decoration: none; border: 1px solid var(--accent); font-weight: 600; display: inline-block;">
               <i class="fas fa-server" style="margin-right: 8px;"></i> System Documentation
             </a>
-            <a href="#" style="flex: 1; text-align: center; padding: 12px 20px; border-radius: 8px; background: var(--text); color: var(--bg); text-decoration: none; font-weight: 600; display: inline-block;">
+            <a href="javascript:void(0)" onclick="navigate('private_repo')" style="flex: 1; text-align: center; padding: 12px 20px; border-radius: 8px; background: var(--text); color: var(--bg); text-decoration: none; font-weight: 600; display: inline-block;">
               <i class="fab fa-github" style="margin-right: 8px;"></i> Repository
             </a>
           </div>
@@ -924,39 +985,6 @@
       navigate('home');
     });
 
-    function generateCloudVideos() {
-      let html = '';
-      awsLabs.forEach((lab, index) => {
-          html += `
-          <a href="${lab.url}" target="_blank" class="project-card" style="padding: 20px 10px; text-decoration: none;">
-            <i class="fab fa-youtube" style="font-size: 2rem; color: #ff0000;"></i>
-            <h3 style="font-size: 1rem; color: var(--text);">${lab.title}</h3>
-            <p style="font-size: 0.75rem; color: var(--muted);">CCP & SAA Practice</p>
-          </a>`;
-      });
-      return html;
-    }
-
-    const awsLabs = [
-        { title: "AWS Lab 1", url: "" },
-        { title: "AWS Lab 2", url: "" },
-        { title: "AWS Lab 3", url: "" },
-        { title: "AWS Lab 4", url: "" },
-        { title: "AWS Lab 5", url: "" },
-        { title: "AWS Lab 6", url: "" },
-        { title: "AWS Lab 7", url: "" },
-        { title: "AWS Lab 8", url: "" },
-        { title: "AWS Lab 9", url: "" },
-        { title: "AWS Lab 10", url: "" },
-        { title: "AWS Lab 11", url: "" },
-        { title: "AWS Lab 12", url: "" },
-        { title: "AWS Lab 13", url: "" },
-        { title: "AWS Lab 14", url: "" },
-        { title: "AWS Lab 15", url: "" },
-        { title: "AWS Lab 16", url: "" },
-        { title: "AWS Lab 17", url: "" },
-        { title: "AWS Lab 18", url: "" },
-    ];
   </script>
 </body>
 </html>
