@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThomasLab | ID Generator Tool</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #6366f1;
+        }
+
+        body { 
+            font-family: 'Cairo', sans-serif; 
+            background-color: var(--bg-dark); 
+            color: #f8fafc;
+            min-height: 100vh;
+        }
+
+        .glass-card { 
+            background: var(--card-bg); 
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+        }
+
+        .custom-input {
+            width: 100%;
+            background-color: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 10px 15px;
+            border-radius: 10px;
+            color: #fff;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .custom-input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+
+        .hidden { display: none; }
+        
+        select option { background: var(--card-bg); color: white; }
+
+        /* Smooth Progress Bar Animation */
+        #progressBarT5 {
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-4xl mx-auto">
+        <section id="tool5" class="tool-section">
+            <div class="glass-card p-6 md:p-10">
+                <div class="mb-8 border-r-4 border-indigo-500 pr-4">
+                    <h2 class="text-2xl font-black">بطاقة الهوية لمدرسة الشمامسه</h2>
+                    <p class="opacity-60 text-sm mt-1">مقاس 65x40 مم | 21 كارت في الصفحة</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div class="space-y-4">
+                        <h3 class="font-black text-indigo-400 border-b border-white/10 pb-2">1. البيانات المتغيرة والشكل</h3>
+                        <label class="block">
+                            <span class="text-xs font-bold opacity-60">ملف الأسماء والأكواد (Excel)</span>
+                            <input type="file" id="t5Excel" accept=".xlsx, .xls, .csv" class="mt-1 block w-full border-2 border-dashed border-slate-700 p-3 rounded-xl text-sm">
+                        </label>
+                        <div class="flex items-center gap-4 bg-slate-800/50 p-3 rounded-xl">
+                            <span class="text-xs font-bold opacity-70">لون الهوية:</span>
+                            <input type="color" id="t5Color" value="#fb8c00" class="h-10 w-20 rounded cursor-pointer bg-transparent">
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="font-black text-emerald-400 border-b border-white/10 pb-2">2. البيانات الثابتة والشعارات</h3>
+                        <div class="grid grid-cols-1 gap-2">
+                            <input type="text" id="t5ServiceName" value="كنيسة العذراء ويوسف النجار" placeholder="الكنيسة" class="custom-input text-sm">
+                            <input type="text" id="t5LevelSelect" value="مدرسة الارشيدياكون حبيب جرجس للالحان" placeholder="اسم الخدمة" class="custom-input text-sm">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="block">
+                                <span class="text-[10px] font-bold opacity-50 text-center block">لوجو (يمين)</span>
+                                <input type="file" id="t5ServiceLogo" accept="image/*" class="text-[10px] w-full">
+                            </label>
+                            <label class="block">
+                                <span class="text-[10px] font-bold opacity-50 text-center block">لوجو (يسار)</span>
+                                <input type="file" id="t5LevelLogo" accept="image/*" class="text-[10px] w-full">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="processIDCards()" id="btnT5" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-5 rounded-2xl shadow-xl transition-all text-lg active:scale-95">
+                    إنشاء وتصدير الملف النهائي
+                </button>
+                
+                <div id="progressContainerT5" class="hidden mt-8 space-y-3">
+                    <div class="flex justify-between items-end">
+                        <div class="flex flex-col">
+                            <span id="currentActionT5" class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Initializing...</span>
+                            <span id="currentPersonT5" class="text-sm font-black text-white truncate max-w-[200px]">Loading Data</span>
+                        </div>
+                        <span id="percentTextT5" class="text-2xl font-black text-indigo-500">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden border border-white/5">
+                        <div id="progressBarT5" class="bg-indigo-500 h-full w-0 shadow-[0_0_15px_rgba(99,102,241,0.5)]"></div>
+                    </div>
+                </div>
+                <div id="statusT5" class="mt-4 text-center font-bold text-indigo-500 min-h-[1.5rem]"></div>
+            </div>
+        </section>
+
+        <div id="temp-qr" class="hidden"></div>
+        <canvas id="finalCanvas" class="hidden"></canvas>
+    </div>
+
+    <footer class="py-6 mt-10">
+        <div class="max-w-6xl mx-auto text-center text-xs font-bold opacity-60">
+            جميع الحقوق محفوظة &copy; 2026 <a target="_blank" href="https://thomaseg.netlify.app/" class="text-sky-400 underline ml-1">ThomasLab's</a>
+        </div>
+    </footer>
+
+    <script>
+        function updateLevelTheme() {
+            const select = document.getElementById('t5LevelSelect');
+            const selectedOption = select.options[select.selectedIndex];
+            const color = selectedOption.getAttribute('data-color');
+            if(color) {
+                document.getElementById('t5Color').value = color;
+            }
+        }
+
+        async function processIDCards() {
+            const elements = {
+                excelFile: document.getElementById('t5Excel').files[0],
+                sLogoInput: document.getElementById('t5ServiceLogo').files[0],
+                lLogoInput: document.getElementById('t5LevelLogo').files[0],
+                themeColor: document.getElementById('t5Color').value,
+                container: document.getElementById('progressContainerT5'),
+                bar: document.getElementById('progressBarT5'),
+                percentTxt: document.getElementById('percentTextT5'),
+                actionTxt: document.getElementById('currentActionT5'),
+                personTxt: document.getElementById('currentPersonT5'),
+                statusTxt: document.getElementById('statusT5')
+            };
+
+            if(!elements.excelFile) return alert("يرجى اختيار ملف الإكسيل");
+
+            elements.container.classList.remove('hidden');
+            elements.statusTxt.innerText = "";
+            elements.bar.style.width = "0%";
+            elements.percentTxt.innerText = "0%";
+
+            const darkenColor = (hex, percent) => {
+                let r = parseInt(hex.slice(1, 3), 16),
+                    g = parseInt(hex.slice(3, 5), 16),
+                    b = parseInt(hex.slice(5, 7), 16);
+                r = Math.floor(r * (1 - percent));
+                g = Math.floor(g * (1 - percent));
+                b = Math.floor(b * (1 - percent));
+                return `rgb(${r}, ${g}, ${b})`;
+            };
+            const darkThemeColor = darkenColor(elements.themeColor, 0.3);
+
+            try {
+                elements.actionTxt.innerText = "Preparing Assets...";
+                
+                const loadImg = async (file, defaultPath) => {
+                    if (file) return new Promise(r => { const fr = new FileReader(); fr.onload=e=>r(e.target.result); fr.readAsDataURL(file); });
+                    try {
+                        const response = await fetch(defaultPath);
+                        if(response.ok) {
+                            const blob = await response.blob();
+                            return new Promise(r => { const fr = new FileReader(); fr.onload=e=>r(e.target.result); fr.readAsDataURL(blob); });
+                        }
+                    } catch(e) { console.warn("Asset not found:", defaultPath); }
+                    return null;
+                };
+
+                const sLogoImg = await loadImg(elements.sLogoInput, '1.png');
+                const lLogoImg = await loadImg(elements.lLogoInput, '2.png');
+                const sName = document.getElementById('t5ServiceName').value || "";
+                const lName = document.getElementById('t5LevelSelect').value || "";
+
+                // Excel Parsing Logic (تجميع البيانات لكل شيت على حدة)
+                const workbook = XLSX.read(await elements.excelFile.arrayBuffer());
+                let sheetsData = {}; // كائن لحفظ بيانات كل شيت بشكل منفصل
+                let totalCards = 0;
+
+                workbook.SheetNames.forEach(sheetName => {
+                    // تجاهل الشيت الذي يحمل اسم 1
+                    if (sheetName.toString().trim() === "1") return;
+
+                    const json = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: "A", defval: "" });
+                    let currentSheetCards = [];
+
+                    json.forEach((row, index) => {
+                        if (index === 0) return;
+
+                        let nameVal = row['C'] ? String(row['C']).trim() : "-----------------";
+                        let codeVal = row['Q'] ? String(row['Q']).trim() : "";
+
+                        if (nameVal === "-----------------" && codeVal === "") return;
+
+                        currentSheetCards.push({
+                            name: nameVal,
+                            code: codeVal,
+                            sheetName: sheetName
+                        });
+                    });
+
+                    // إذا كان الشيت يحتوي على بيانات، نضيفه إلى الكائن
+                    if (currentSheetCards.length > 0) {
+                        sheetsData[sheetName] = currentSheetCards;
+                        totalCards += currentSheetCards.length;
+                    }
+                });
+
+                if(totalCards === 0) {
+                    elements.container.classList.add('hidden');
+                    return alert("لم يتم العثور على بيانات صالحة في الأعمدة المحددة.");
+                }
+
+                const { jsPDF } = window.jspdf;
+                const cardW = 65, cardH = 40;
+                const cols = 3, rows = 7;
+                const spacing = 0.2;
+
+                const totalWidth = (cols * cardW) + ((cols - 1) * spacing);
+                const totalHeight = (rows * cardH) + ((rows - 1) * spacing);
+                const marginX = (210 - totalWidth) / 2;
+                const marginY = (297 - totalHeight) / 2;
+
+                const canvas = document.getElementById('finalCanvas');
+                const ctx = canvas.getContext('2d', { alpha: false });
+                const renderScale = 4;
+                canvas.width = 650 * renderScale; 
+                canvas.height = 400 * renderScale; 
+                ctx.scale(renderScale, renderScale);
+
+                let processedCount = 0;
+
+                // المرور على كل شيت لإنشاء PDF منفصل
+                for (const sheetName of Object.keys(sheetsData)) {
+                    const sheetCards = sheetsData[sheetName];
+                    
+                    // إنشاء مستند PDF جديد لهذا الشيت
+                    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4', compress: true });
+                    let currentCol = 0, currentRow = 0;
+
+                    for(let i=0; i < sheetCards.length; i++) {
+                        const cardData = sheetCards[i];
+                        
+                        let displayCode = cardData.code;
+                        let qrCodeText = displayCode;
+                        
+                        if (displayCode === "لا يوجد") {
+                            displayCode = ".................";
+                            qrCodeText = "No Code"; 
+                        } else if (displayCode === "") {
+                            qrCodeText = "Empty";
+                        }
+                        
+                        const nameVal = cardData.name;
+                        
+                        // Update Progress UI بناءً على العدد الإجمالي للبطاقات
+                        processedCount++;
+                        const progressPercent = Math.round((processedCount / totalCards) * 100);
+                        elements.bar.style.width = progressPercent + "%";
+                        elements.percentTxt.innerText = progressPercent + "%";
+                        elements.actionTxt.innerText = `Sheet: ${sheetName} | Card: ${i + 1}/${sheetCards.length}`;
+                        elements.personTxt.innerText = nameVal;
+
+                        // QR Generation
+                        const qrContainer = document.getElementById('temp-qr'); 
+                        qrContainer.innerHTML = "";
+                        new QRCode(qrContainer, {text: qrCodeText, width: 400, height: 400, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H});
+                        await new Promise(res => setTimeout(res, 50));
+                        const qrCanvas = qrContainer.querySelector('canvas');
+
+                        // 1. Draw Card Background
+                        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                        gradient.addColorStop(0, "#FFFFFF");
+                        gradient.addColorStop(1, "#F0F4F8");
+                        ctx.fillStyle = gradient;
+                        ctx.fillRect(0, 0, 650, 400);
+
+                        // 2. Header Strip
+                        ctx.fillStyle = darkThemeColor;
+                        ctx.fillRect(0, 0, 650, 35);
+
+                        // 3. Logos Rendering
+                        const logoSize = 88;
+                        if(sLogoImg) {
+                            const img = await new Promise(r => {const i=new Image(); i.onload=()=>r(i); i.src=sLogoImg;});
+                            ctx.drawImage(img, 650 - 115, 55, logoSize, logoSize); 
+                        }
+                        if(lLogoImg) {
+                            const img = await new Promise(r => {const i=new Image(); i.onload=()=>r(i); i.src=lLogoImg;});
+                            ctx.drawImage(img, 27, 55, logoSize, logoSize); 
+                        }
+
+                        // 4. Identity Text
+                        ctx.textAlign = "center";
+                        ctx.font = "bold 32px Cairo"; 
+                        ctx.fillStyle = "#1A1A1A";
+                        ctx.fillText(sName, 325, 80);
+                        
+                        ctx.font = "24px Cairo"; 
+                        ctx.fillStyle = "#6B7280";
+                        ctx.fillText(lName, 325, 115);
+
+                        // Divider Line
+                        ctx.strokeStyle = "#E5E7EB";
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(150, 135);
+                        ctx.lineTo(500, 135);
+                        ctx.stroke();
+
+                        // 5. QR Code Box
+                        const qrBoxSize = 200, qrX = 40, qrY = 160, radius = 15;
+                        ctx.fillStyle = "white";
+                        ctx.shadowBlur = 10; ctx.shadowColor = "rgba(0,0,0,0.08)";
+                        ctx.beginPath();
+                        ctx.roundRect(qrX, qrY, qrBoxSize, qrBoxSize, radius);
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                        ctx.drawImage(qrCanvas, qrX + 15, qrY + 15, 170, 170);
+
+                        // 6. User Data (Name, Code, Sheet Name)
+                        ctx.textAlign = "right";
+                        
+                        ctx.font = "bold 38px Cairo";
+                        ctx.fillStyle = elements.themeColor;
+                        ctx.fillText(nameVal.split(' ').slice(0, 3).join(' '), 610, 220); 
+                        
+                        ctx.font = "bold 28px Cairo";
+                        ctx.fillStyle = "#4B5563";
+                        ctx.fillText(`كود: ${displayCode}`, 610, 280); 
+
+                        ctx.font = "bold 22px Cairo";
+                        ctx.fillStyle = "#6B7280";
+                        ctx.fillText(`${sheetName}`, 610, 330);
+
+                        // 7. Composite to PDF
+                        const xPos = marginX + (currentCol * (cardW + spacing));
+                        const yPos = marginY + (currentRow * (cardH + spacing));
+                        doc.addImage(canvas.toDataURL("image/png"), 'PNG', xPos, yPos, cardW, cardH, undefined, 'FAST');
+                        
+                        // Draw cutting guides
+                        doc.setDrawColor(230, 230, 230);
+                        doc.setLineWidth(0.1);
+                        doc.rect(xPos, yPos, cardW, cardH); 
+
+                        // Grid Logic
+                        currentCol++; 
+                        if(currentCol >= cols) { 
+                            currentCol = 0; 
+                            currentRow++; 
+                        }
+                        if(currentRow >= rows && i < sheetCards.length - 1) { 
+                            doc.addPage(); 
+                            currentCol = 0; 
+                            currentRow = 0; 
+                        }
+                    }
+
+                    // حفظ الملف الخاص بالتابة الحالية
+                    // سيتم تسميته: اسم الملف المختار _ اسم التابة
+                    doc.save(`${sheetName}.pdf`);
+                }
+
+                // Finalize Output
+                elements.statusTxt.innerText = "✅ تم الانتهاء بنجاح وتحميل جميع الملفات!";
+                setTimeout(() => elements.container.classList.add('hidden'), 5000);
+
+            } catch (err) {
+                console.error("Generator Error:", err);
+                elements.statusTxt.innerText = "❌ حدث خطأ: " + err.message;
+            }
+        }
+    </script>
+</body>
+</html>
