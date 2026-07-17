@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThomasLab | نظام التقارير الذكي</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;900&display=swap');
+        
+        :root[data-theme="dark"] {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --accent: #38bdf8;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+        :root[data-theme="light"] {
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --accent: #0284c7;
+            --border: rgba(0, 0, 0, 0.1);
+        }
+
+        body { 
+            font-family: 'Cairo', sans-serif; 
+            background-color: var(--bg-color); 
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        header {
+            background: var(--card-bg);
+            padding: 0.8rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-logo { height: 40px; width: auto; margin-left: 12px; }
+
+        .admin-card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        .custom-input {
+            width: 100%;
+            background-color: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border);
+            padding: 10px 14px;
+            border-radius: 12px;
+            color: var(--text-main);
+            outline: none;
+            transition: 0.2s;
+        }
+        [data-theme="light"] .custom-input { background-color: #f8fafc; color: #1e293b; }
+
+        .custom-input:focus { border-color: var(--accent); ring: 2px var(--accent); }
+
+        /* منطقة التقرير - تظل بيضاء دائماً كما هي في الكود الأصلي لضمان جودة الصورة */
+        #capture-area { 
+            display: inline-block;
+            background: white;
+            padding: 15px; 
+            border: 1px solid #cbd5e1;
+            direction: rtl;
+            color: #1e293b; /* نصوص التقرير سوداء دائماً */
+        }
+        .name-text { font-size: 14px; font-weight: 700; color: #1e293b; }
+        .index-num { font-size: 11px; font-weight: 900; margin-left: 8px; width: 25px; flex-shrink: 0; text-align: left; }
+        .names-grid { display: grid; gap: 2px 15px; grid-auto-flow: column; }
+        .name-item { display: flex; align-items: center; padding: 3px 5px; width: 185px; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
+
+        footer {
+            padding: 1rem;
+            text-align: center;
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="flex items-center">
+            <a href="index.html" class="bg-slate-700 text-white px-3 py-1 rounded-lg text-sm ml-4 hover:bg-slate-600 transition">الرئيسية</a>
+            <div class="flex items-center">
+                <img src="https://cdn-icons-png.flaticon.com/512/3211/3211468.png" alt="Logo" class="header-logo"> <h1 class="text-lg font-black tracking-tight">ThomasLab's <span class="font-light opacity-70">| تقارير الحضور</span></h1>
+            </div>
+        </div>
+        <button onclick="toggleTheme()" class="border border-sky-500 text-sky-500 px-4 py-1 rounded-full text-sm hover:bg-sky-500 hover:text-white transition">🌓 تبديل المظهر</button>
+    </header>
+
+    <main class="p-4 md:p-8">
+        <div class="max-w-5xl mx-auto admin-card shadow-2xl">
+            <div class="bg-gradient-to-r from-slate-900 to-slate-800 p-4 text-center border-b border-slate-700">
+                <h2 class="text-xl font-bold text-white flex justify-center items-center gap-2">
+                    <span class="text-2xl">📊</span> إعداد بيانات التقرير
+                </h2>
+            </div>
+
+            <div class="p-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 space-y-4">
+                        <div>
+                            <label class="text-xs font-bold opacity-70 mb-1 block">📍 اسم الكنيسة</label>
+                            <input type="text" id="churchName" value="كنيسة السيدة العذراء مريم والقديس يوسف النجار" class="custom-input">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs font-bold opacity-70 mb-1 block">⛪ الخدمة</label>
+                                <input type="text" id="serviceName" value="خدمة مدارس الاحد" class="custom-input">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold opacity-70 mb-1 block">👥 الأسرة</label>
+                                <input type="text" id="familyName" value="اسرة اعدادي بنين" class="custom-input">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs font-bold opacity-70 mb-1 block">🏫 اسم الفصل</label>
+                                <input type="text" id="className" placeholder="مثال: أولى إعدادي" class="custom-input">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold opacity-70 mb-1 block">📝 نوع التقرير</label>
+                                <select id="reportType" class="custom-input">
+                                    <option value="حضور">حضور ✅</option>
+                                    <option value="غياب">غياب ❌</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800/50 p-4 rounded-2xl border border-white/5 space-y-4">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="col-span-2 text-xs font-bold text-sky-400">📅 التاريخ الميلادي</div>
+                            <select id="dayMiladi" class="custom-input"></select>
+                            <select id="monthMiladi" class="custom-input">
+                                <option value="يناير">يناير</option><option value="فبراير">فبراير</option><option value="مارس">مارس</option><option value="أبريل">أبريل</option><option value="مايو">مايو</option><option value="يونيو">يونيو</option><option value="يوليو">يوليو</option><option value="أغسطس">أغسطس</option><option value="سبتمبر">سبتمبر</option><option value="أكتوبر">أكتوبر</option><option value="نوفمبر">نوفمبر</option><option value="ديسمبر">ديسمبر</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="col-span-2 text-xs font-bold text-amber-500">📜 التاريخ القبطي</div>
+                            <select id="dayCoptic" class="custom-input"></select>
+                            <select id="monthCoptic" class="custom-input">
+                                <option value="توت">توت</option><option value="بابة">بابة</option><option value="هاتور">هاتور</option><option value="كيهك">كيهك</option><option value="طوبة">طوبة</option><option value="أمشير">أمشير</option><option value="برمهات">برمهات</option><option value="برمودة">برمودة</option><option value="بشنس">بشنس</option><option value="بؤونة">بؤونة</option><option value="أبيب">أبيب</option><option value="مسرى">مسرى</option><option value="نسيء">نسيء</option>
+                            </select>
+                        </div>
+                        <label class="block w-full border-2 border-dashed border-slate-600 rounded-xl p-4 text-center hover:border-sky-500 transition cursor-pointer">
+                            <span class="text-2xl">📁</span>
+                            <p class="text-[10px] font-bold opacity-60">رفع ملف إكسيل</p>
+                            <input type="file" id="excelFile" accept=".xlsx, .xls" class="hidden">
+                        </label>
+                    </div>
+                </div>
+
+                <button onclick="processData()" class="w-full mt-6 bg-sky-600 hover:bg-sky-500 text-white font-black py-4 rounded-xl shadow-lg transition transform active:scale-95">
+                    توليد التقرير النهائي ✨
+                </button>
+            </div>
+        </div>
+
+        <div class="flex flex-col items-center mt-12 pb-10">
+            <div id="capture-area" class="hidden shadow-2xl">
+                <div class="header-top-info text-center border-b pb-2 mb-2">
+                    <h3 id="out-church" style="font-size: 15px; font-weight: 900; color: #1e293b;"></h3>
+                    <div style="font-size: 12px; font-weight: 700; color: #64748b;">
+                        <span id="out-service"></span> - <span id="out-family"></span>
+                    </div>
+                </div>
+
+                <div id="header-row" class="flex justify-between items-center px-4 py-2 text-white rounded mb-3">
+                    <span id="out-miladi" style="font-size: 11px; font-weight: 800; width: 25%;"></span>
+                    <h1 id="out-mainTitle" style="font-size: 19px; font-weight: 900; width: 50%; text-align: center;"></h1>
+                    <span id="out-coptic" style="font-size: 11px; font-weight: 800; width: 25%; text-align: left;"></span>
+                </div>
+
+                <div id="names-grid" class="names-grid"></div>
+            </div>
+
+            <button id="downloadBtn" class="hidden mt-6 bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3 rounded-full font-bold shadow-xl transition-all">
+                حفظ التقرير كصورة 📥
+            </button>
+        </div>
+    </main>
+
+    <footer>
+        <p class="text-sm opacity-80">Powered by 
+            <a href="https://linkedin.com/in/YOUR_PROFILE" target="_blank" class="text-sky-400 font-bold hover:underline">ThomasLab's</a>
+        </p>
+    </footer>
+
+    <script>
+        // دالة التبديل بين المظاهر
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            html.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+        }
+
+        // الوظائف الأصلية (بدون تعديل)
+        window.onload = function() {
+            const dMiladi = document.getElementById('dayMiladi');
+            const dCoptic = document.getElementById('dayCoptic');
+            for(let i=1; i<=31; i++) {
+                dMiladi.options.add(new Option(i, i));
+                if(i <= 30) dCoptic.options.add(new Option(i, i));
+            }
+        };
+
+        function processData() {
+            const fileInput = document.getElementById('excelFile');
+            if (!fileInput.files[0]) return alert("برجاء اختيار ملف الإكسيل");
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const workbook = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
+                const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                let nameKey = Object.keys(rows[0] || {}).find(k => k.includes("الاسم") || k.includes("اسم"));
+                const names = rows.map(r => String(r[nameKey] || "").trim().replace(/\s+/g, ' ').split(' ').slice(0, 3).join(' ')).filter(n => n.length > 2);
+                renderOfficial(names);
+            };
+            reader.readAsArrayBuffer(fileInput.files[0]);
+        }
+
+        function renderOfficial(names) {
+            const type = document.getElementById('reportType').value;
+            const color = type === "حضور" ? "#059669" : "#dc2626";
+            
+            document.getElementById('out-church').innerText = document.getElementById('churchName').value;
+            document.getElementById('out-service').innerText = document.getElementById('serviceName').value;
+            document.getElementById('out-family').innerText = document.getElementById('familyName').value;
+            
+            document.getElementById('header-row').style.backgroundColor = color;
+            document.getElementById('out-mainTitle').innerText = `${type} ${document.getElementById('className').value}`;
+            document.getElementById('out-miladi').innerText = document.getElementById('dayMiladi').value + " " + document.getElementById('monthMiladi').value;
+            document.getElementById('out-coptic').innerText = document.getElementById('dayCoptic').value + " " + document.getElementById('monthCoptic').value;
+
+            const grid = document.getElementById('names-grid');
+            grid.innerHTML = '';
+            const count = names.length;
+            let bestCols = 1;
+            let minDiff = Infinity;
+            for (let c = 1; c <= 6; c++) {
+                let r = Math.ceil(count / c);
+                let diff = Math.abs((c * 185) - (r * 32 + 150));
+                if (diff < minDiff) { minDiff = diff; bestCols = c; }
+            }
+            let finalRows = Math.ceil(count / bestCols);
+            grid.style.gridTemplateColumns = `repeat(${bestCols}, 1fr)`;
+            grid.style.gridTemplateRows = `repeat(${finalRows}, auto)`;
+
+            names.forEach((name, i) => {
+                const div = document.createElement('div');
+                div.className = "name-item";
+                div.innerHTML = `<span style="color:${color}" class="index-num">${i+1}.</span><span class="name-text">${name}</span>`;
+                grid.appendChild(div);
+            });
+
+            document.getElementById('capture-area').classList.remove('hidden');
+            document.getElementById('downloadBtn').classList.remove('hidden');
+            
+            document.getElementById('downloadBtn').onclick = function() {
+                html2canvas(document.getElementById('capture-area'), {
+                    scale: 3,
+                    useCORS: true,
+                    backgroundColor: "#ffffff"
+                }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = `تقرير_${document.getElementById('className').value}.png`;
+                    link.href = canvas.toDataURL("image/png", 1.0);
+                    link.click();
+                });
+            };
+        }
+    </script>
+</body>
+</html>
