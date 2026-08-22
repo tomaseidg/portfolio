@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThomasLab | Verse Cards Generator</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #6366f1;
+        }
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--bg-dark);
+            color: #f8fafc;
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+        }
+        .custom-input {
+            width: 100%;
+            background-color: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 10px 15px;
+            border-radius: 10px;
+            color: #fff;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .custom-input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+        .hidden { display: none; }
+        #progressBarV { transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-4xl mx-auto">
+        <section class="tool-section">
+            <div class="glass-card p-6 md:p-10">
+                <div class="mb-8 border-r-4 border-indigo-500 pr-4">
+                    <h2 class="text-2xl font-black">مولّد كروت آيات الكتاب المقدس</h2>
+                    <p class="opacity-60 text-sm mt-1">ورق A4 | 21 كارت في الصفحة | مقاس 65×40 مم | فاصل قص 1 مم</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div class="space-y-4">
+                        <h3 class="font-black text-indigo-400 border-b border-white/10 pb-2">1. الآيات والعدد</h3>
+                        <label class="block">
+                            <span class="text-xs font-bold opacity-60">ملف الآيات (Excel) — عمود أول: الآية | عمود تاني: الشاهد</span>
+                            <input type="file" id="vExcel" accept=".xlsx, .xls, .csv" class="mt-1 block w-full border-2 border-dashed border-slate-700 p-3 rounded-xl text-sm">
+                        </label>
+                        <label class="block">
+                            <span class="text-xs font-bold opacity-60">عدد الكروت المطلوب إنشاؤها</span>
+                            <input type="number" id="vCount" value="21" min="1" class="custom-input text-sm">
+                        </label>
+                        <div class="flex items-center gap-4 bg-slate-800/50 p-3 rounded-xl">
+                            <span class="text-xs font-bold opacity-70">لون الهوية:</span>
+                            <input type="color" id="vColor" value="#f44336" class="h-10 w-20 rounded cursor-pointer bg-transparent">
+                        </div>
+                        <input type="text" id="vFileName" placeholder="اسم ملف PDF (اختياري)" class="custom-input text-sm">
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="font-black text-emerald-400 border-b border-white/10 pb-2">2. الشكل والشعارات</h3>
+                        <input type="text" id="vTopText" value="كلمة الحياة" placeholder="الجملة في الشريط العلوي" class="custom-input text-sm">
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="block">
+                                <span class="text-[10px] font-bold opacity-50 text-center block">لوجو (يمين)</span>
+                                <input type="file" id="vLogoRight" accept="image/*" class="text-[10px] w-full">
+                            </label>
+                            <label class="block">
+                                <span class="text-[10px] font-bold opacity-50 text-center block">لوجو (يسار)</span>
+                                <input type="file" id="vLogoLeft" accept="image/*" class="text-[10px] w-full">
+                            </label>
+                        </div>
+                        <label class="block">
+                            <span class="text-xs font-bold opacity-60">صور الخلفية (يمكن اختيار أكتر من صورة، هتتوزع عشوائيًا)</span>
+                            <input type="file" id="vBgImages" accept="image/*" multiple class="mt-1 block w-full border-2 border-dashed border-slate-700 p-3 rounded-xl text-sm">
+                        </label>
+                    </div>
+                </div>
+
+                <button onclick="generateVerseCards()" id="btnV" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-5 rounded-2xl shadow-xl transition-all text-lg active:scale-95">
+                    إنشاء وتصدير PDF
+                </button>
+
+                <div id="progressContainerV" class="hidden mt-8 space-y-3">
+                    <div class="flex justify-between items-end">
+                        <div class="flex flex-col">
+                            <span id="currentActionV" class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Initializing...</span>
+                            <span id="currentItemV" class="text-sm font-black text-white truncate max-w-[260px]">جاري التحضير</span>
+                        </div>
+                        <span id="percentTextV" class="text-2xl font-black text-indigo-500">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden border border-white/5">
+                        <div id="progressBarV" class="bg-indigo-500 h-full w-0 shadow-[0_0_15px_rgba(99,102,241,0.5)]"></div>
+                    </div>
+                </div>
+                <div id="statusV" class="mt-4 text-center font-bold text-indigo-500 min-h-[1.5rem]"></div>
+            </div>
+        </section>
+
+        <canvas id="verseCanvas" class="hidden"></canvas>
+    </div>
+
+    <footer class="py-6 mt-10">
+        <div class="max-w-6xl mx-auto text-center text-xs font-bold opacity-60">
+            جميع الحقوق محفوظة &copy; 2026 <a target="_blank" href="https://thomaseg.netlify.app/" class="text-sky-400 underline ml-1">ThomasLab's</a>
+        </div>
+    </footer>
+
+    <script>
+        // مقاس الشبكة على ورق A4: 3 أعمدة × 7 صفوف = 21 كارت، مقاس 65×40 مم، فاصل قص 1 مم بين الكروت
+        const A4_W = 210, A4_H = 297;
+        const CARD_W_MM = 65, CARD_H_MM = 40;
+        const COLS = 3, ROWS = 7, GAP = 0.5;
+
+        const GRID_W = COLS * CARD_W_MM + (COLS - 1) * GAP;
+        const GRID_H = ROWS * CARD_H_MM + (ROWS - 1) * GAP;
+        const MARGIN_X = (A4_W - GRID_W) / 2;
+        const MARGIN_Y = (A4_H - GRID_H) / 2;
+
+        // نظام إحداثيات منطقي 10px = 1مم لتصميم الكارت الواحد (650x400 يمثل 65x40مم)
+        const CW = CARD_W_MM * 10, CH = CARD_H_MM * 10;
+
+        function setupVerseCanvas() {
+            const canvas = document.getElementById('verseCanvas');
+            const ctx = canvas.getContext('2d', { alpha: false });
+            const renderScale = 4;
+            canvas.width = CW * renderScale;
+            canvas.height = CH * renderScale;
+            ctx.scale(renderScale, renderScale);
+            return { canvas, ctx };
+        }
+
+        const loadImg = async (file) => {
+            if (!file) return null;
+            return new Promise(r => { const fr = new FileReader(); fr.onload = e => r(e.target.result); fr.readAsDataURL(file); });
+        };
+
+        const loadImgEl = (src) => new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = src; });
+
+        function wrapText(ctx, text, maxWidth, font) {
+            ctx.font = font;
+            const words = text.split(' ');
+            const lines = [];
+            let current = '';
+            words.forEach(word => {
+                const test = current ? current + ' ' + word : word;
+                if (ctx.measureText(test).width > maxWidth && current) {
+                    lines.push(current);
+                    current = word;
+                } else {
+                    current = test;
+                }
+            });
+            if (current) lines.push(current);
+            return lines;
+        }
+
+        // خلط عشوائي (Fisher-Yates)
+        function shuffle(arr) {
+            const a = arr.slice();
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        // توزيع الآيات بالتساوي على عدد الكروت المطلوب، بترتيب عشوائي نهائي
+        function buildVerseList(verses, count) {
+            const M = verses.length;
+            const repeats = Math.floor(count / M);
+            const remainder = count % M;
+            let pool = [];
+            for (let i = 0; i < repeats; i++) pool.push(...verses);
+            const shuffledIdx = shuffle([...Array(M).keys()]);
+            for (let i = 0; i < remainder; i++) pool.push(verses[shuffledIdx[i]]);
+            return shuffle(pool);
+        }
+
+        // رسم صورة بطريقة Cover (تملأ المساحة وتُقصّ الزيادة) بدل التمديد المشوِّه
+        function drawImageCover(ctx, img, x, y, w, h) {
+            const scale = Math.max(w / img.width, h / img.height);
+            const sw = w / scale, sh = h / scale;
+            const sx = (img.width - sw) / 2, sy = (img.height - sh) / 2;
+            ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+        }
+
+        function fitVerseText(ctx, text, maxWidth, maxHeight) {
+            for (let size = 30; size >= 15; size--) {
+                const lineHeight = Math.round(size * 1.45);
+                const lines = wrapText(ctx, text, maxWidth, `bold ${size}px Cairo`);
+                if (lines.length * lineHeight <= maxHeight) return { size, lineHeight, lines };
+            }
+            const size = 15, lineHeight = Math.round(size * 1.45);
+            return { size, lineHeight, lines: wrapText(ctx, text, maxWidth, `bold ${size}px Cairo`) };
+        }
+
+        async function generateVerseCards() {
+            const excelFile = document.getElementById('vExcel').files[0];
+            const count = Math.max(1, parseInt(document.getElementById('vCount').value) || 21);
+            const themeColor = document.getElementById('vColor').value;
+            const topText = document.getElementById('vTopText').value || '';
+            const rightLogoFile = document.getElementById('vLogoRight').files[0];
+            const leftLogoFile = document.getElementById('vLogoLeft').files[0];
+            const bgFiles = Array.from(document.getElementById('vBgImages').files || []);
+
+            const container = document.getElementById('progressContainerV');
+            const bar = document.getElementById('progressBarV');
+            const percentTxt = document.getElementById('percentTextV');
+            const actionTxt = document.getElementById('currentActionV');
+            const itemTxt = document.getElementById('currentItemV');
+            const statusTxt = document.getElementById('statusV');
+
+            if (!excelFile) return alert('يرجى اختيار ملف الآيات (Excel)');
+
+            container.classList.remove('hidden');
+            statusTxt.innerText = '';
+            bar.style.width = '0%';
+            percentTxt.innerText = '0%';
+
+            try {
+                actionTxt.innerText = 'جاري تحضير الصور والشعارات...';
+
+                const rightLogoSrc = await loadImg(rightLogoFile);
+                const leftLogoSrc = await loadImg(leftLogoFile);
+                const rightLogo = rightLogoSrc ? await loadImgEl(rightLogoSrc) : null;
+                const leftLogo = leftLogoSrc ? await loadImgEl(leftLogoSrc) : null;
+
+                const bgSources = await Promise.all(bgFiles.map(f => loadImg(f)));
+                const bgImages = await Promise.all(bgSources.map(src => loadImgEl(src)));
+
+                const workbook = XLSX.read(await excelFile.arrayBuffer());
+                const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 'A', defval: '' });
+
+                const verses = [];
+                json.forEach((row, index) => {
+                    if (index === 0) return;
+                    const verseText = row['A'] ? String(row['A']).trim() : '';
+                    const reference = row['B'] ? String(row['B']).trim() : '';
+                    if (!verseText) return;
+                    verses.push({ verseText, reference });
+                });
+
+                if (verses.length === 0) {
+                    container.classList.add('hidden');
+                    return alert('لم يتم العثور على آيات صالحة في العمودين الأول والثاني.');
+                }
+
+                const cardList = buildVerseList(verses, count);
+                const total = cardList.length;
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4', compress: true });
+                const { canvas, ctx } = setupVerseCanvas();
+
+                const barHeight = 58, logoSize = 68, logoY = barHeight + 10;
+                const bodyTop = logoY + logoSize + 14;
+                const bodyBottom = CH - 16;
+                const bodyHeight = bodyBottom - bodyTop;
+                const textMaxWidth = CW - 90;
+
+                let col = 0, row = 0;
+
+                for (let i = 0; i < total; i++) {
+                    const { verseText, reference } = cardList[i];
+
+                    const percent = Math.round(((i + 1) / total) * 100);
+                    bar.style.width = percent + '%';
+                    percentTxt.innerText = percent + '%';
+                    actionTxt.innerText = `جاري إنشاء الكارت (${i + 1} من ${total})`;
+                    itemTxt.innerText = reference || verseText;
+
+                    // 1. الخلفية: صورة عشوائية (Cover) أو تدرج افتراضي
+                    if (bgImages.length > 0) {
+                        const img = bgImages[Math.floor(Math.random() * bgImages.length)];
+                        drawImageCover(ctx, img, 0, 0, CW, CH);
+                    } else {
+                        const gradient = ctx.createLinearGradient(0, 0, 0, CH);
+                        gradient.addColorStop(0, '#FFFFFF');
+                        gradient.addColorStop(1, '#F0F4F8');
+                        ctx.fillStyle = gradient;
+                        ctx.fillRect(0, 0, CW, CH);
+                    }
+
+                    // 2. طبقة تعتيم بيضاء شفافة فوق جسم الكارت لضمان وضوح النص فوق أي صورة
+                    ctx.fillStyle = 'rgba(255,255,255,0.72)';
+                    ctx.fillRect(0, barHeight, CW, CH - barHeight);
+
+                    // 3. الشريط العلوي بلون الهوية + الجملة المكتوبة
+                    ctx.fillStyle = themeColor;
+                    ctx.fillRect(0, 0, CW, barHeight);
+                    ctx.textAlign = 'center';
+                    ctx.font = 'bold 24px Cairo';
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillText(topText, CW / 2, barHeight / 2 + 8);
+
+                    // 4. الشعارات (يمين ويسار) بشكل شارة تتداخل مع الشريط العلوي
+                    if (rightLogo) ctx.drawImage(rightLogo, CW - 14 - logoSize, logoY, logoSize, logoSize);
+                    if (leftLogo) ctx.drawImage(leftLogo, 14, logoY, logoSize, logoSize);
+
+                    // 5. الآية في منتصف الكارت (بدون علامات تنصيص) + الشاهد أسفلها بين علامتي تنصيص
+                    // بنفس لون وحجم الآية
+                    const { size, lineHeight, lines } = fitVerseText(ctx, verseText, textMaxWidth, bodyHeight - 40);
+                    const quotedRef = `"${reference}"`;
+
+                    const blockHeight = lines.length * lineHeight + 16 + lineHeight;
+                    let cursorY = bodyTop + (bodyHeight - blockHeight) / 2 + size * 0.8;
+
+                    ctx.textAlign = 'center';
+                    ctx.font = `bold ${size}px Cairo`;
+                    ctx.fillStyle = '#1F2937';
+                    lines.forEach(line => { ctx.fillText(line, CW / 2, cursorY); cursorY += lineHeight; });
+
+                    cursorY += 16;
+                    ctx.font = `bold ${size}px Cairo`;
+                    ctx.fillStyle = '#1F2937';
+                    ctx.fillText(quotedRef, CW / 2, cursorY);
+
+                    // 6. تركيب الكارت في الشبكة (بدون أي إطار/هامش رمادي حول الكارت)
+                    const xPos = MARGIN_X + col * (CARD_W_MM + GAP);
+                    const yPos = MARGIN_Y + row * (CARD_H_MM + GAP);
+                    doc.addImage(canvas.toDataURL('image/png'), 'PNG', xPos, yPos, CARD_W_MM, CARD_H_MM, undefined, 'FAST');
+
+                    col++;
+                    if (col >= COLS) { col = 0; row++; }
+                    if (row >= ROWS && i < total - 1) { doc.addPage(); col = 0; row = 0; }
+                }
+
+                doc.save(`${document.getElementById('vFileName').value || 'Verse_Cards'}.pdf`);
+                statusTxt.innerText = '✅ تم إنشاء الكروت بنجاح!';
+                setTimeout(() => container.classList.add('hidden'), 5000);
+            } catch (err) {
+                console.error(err);
+                statusTxt.innerText = '❌ حدث خطأ: ' + err.message;
+            }
+        }
+    </script>
+</body>
+</html>
