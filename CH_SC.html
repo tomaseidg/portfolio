@@ -63,7 +63,7 @@
             <div class="glass-card p-6 md:p-10">
                 <div class="mb-8 border-r-4 border-indigo-500 pr-4">
                     <h2 class="text-2xl font-black">بطاقة الهوية لمدرسة الشمامسه</h2>
-                    <p class="opacity-60 text-sm mt-1">مقاس 65x40 مم | 21 كارت في الصفحة</p>
+                    <p class="opacity-60 text-sm mt-1">كارت واحد في كل صفحة | مقاس القص 86×54 مم داخل هامش أمان 92×58 مم</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
@@ -75,7 +75,7 @@
                         </label>
                         <div class="flex items-center gap-4 bg-slate-800/50 p-3 rounded-xl">
                             <span class="text-xs font-bold opacity-70">لون الهوية:</span>
-                            <input type="color" id="t5Color" value="#fb8c00" class="h-10 w-20 rounded cursor-pointer bg-transparent">
+                            <input type="color" id="t5Color" value="#f44336" class="h-10 w-20 rounded cursor-pointer bg-transparent">
                         </div>
                     </div>
 
@@ -99,7 +99,7 @@
                 </div>
 
                 <button onclick="processIDCards()" id="btnT5" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-5 rounded-2xl shadow-xl transition-all text-lg active:scale-95">
-                    إنشاء وتصدير الملف النهائي
+                    إنشاء وتصدير PDF (صفحة مستقلة لكل كارت)
                 </button>
                 
                 <div id="progressContainerT5" class="hidden mt-8 space-y-3">
@@ -118,17 +118,107 @@
             </div>
         </section>
 
+        <section id="tool5back" class="tool-section mt-8">
+            <div class="glass-card p-6 md:p-10">
+                <div class="mb-8 border-r-4 border-rose-500 pr-4">
+                    <h2 class="text-2xl font-black">تصميم ظهر الكارت</h2>
+                    <p class="opacity-60 text-sm mt-1">نفس مقاس وجه الكارت | صفحة واحدة مكررة لعدد النسخ المطلوب</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div class="space-y-4">
+                        <h3 class="font-black text-indigo-400 border-b border-white/10 pb-2">1. الشعار والعدد</h3>
+                        <label class="block">
+                            <span class="text-xs font-bold opacity-60">شعار خلفية الظهر (اللوجو الدائري)</span>
+                            <input type="file" id="backLogo" accept="image/*" class="mt-1 block w-full border-2 border-dashed border-slate-700 p-3 rounded-xl text-sm">
+                        </label>
+                        <label class="block">
+                            <span class="text-xs font-bold opacity-60">عدد نسخ ظهر الكارت</span>
+                            <input type="number" id="backCopies" value="1" min="1" class="custom-input text-sm">
+                        </label>
+                        <input type="text" id="backFileName" placeholder="اسم ملف PDF (اختياري)" class="custom-input text-sm">
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="font-black text-emerald-400 border-b border-white/10 pb-2">2. التعليمات (كل بند في سطر)</h3>
+                        <textarea id="backInstructions" rows="10" class="custom-input text-sm leading-relaxed">القدوة الصالحة: أن يكون الشماس بلا لوم، محافظاً على قدسية الرتبة وقدوة للجميع
+المشاركة الليتورجية: الالتزام بحضور القداسات والعشيات والتسبحة والصلوات الكنسية
+الإرشاد الروحي: المتابعة المستمرة والمنتظمة مع أب الاعتراف
+تسجيل الحضور: تسجيل الحضور بالباركود في المحاضرات والقداسات
+الدراسة والتكليفات: المواظبة على الامتحانات والتكليفات (ألحان - طقس - لغة قبطية)
+الطاعة والمحبة: الخضوع بروح المحبة لتعليمات الآباء وخدام ومسؤولي المدرسة
+تعليمات الكارت: الالتزام بإحضار الكارت دائماً والحفاظ عليه، والإبلاغ عند فقدانه</textarea>
+                    </div>
+                </div>
+
+                <button onclick="generateCardBack()" id="btnT5Back" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-black py-5 rounded-2xl shadow-xl transition-all text-lg active:scale-95">
+                    إنشاء وتصدير PDF لظهر الكارت
+                </button>
+
+                <div id="statusT5Back" class="mt-4 text-center font-bold text-rose-500 min-h-[1.5rem]"></div>
+            </div>
+        </section>
+
         <div id="temp-qr" class="hidden"></div>
         <canvas id="finalCanvas" class="hidden"></canvas>
     </div>
 
     <footer class="py-6 mt-10">
         <div class="max-w-6xl mx-auto text-center text-xs font-bold opacity-60">
-            جميع الحقوق محفوظة &copy; 2026 <a target="_blank" href="https://portfolio.thomaseg.workers.dev/" class="text-sky-400 underline ml-1">ThomasLab's</a>
+            جميع الحقوق محفوظة &copy; 2026 <a target="_blank" href="https://thomaseg.netlify.app/" class="text-sky-400 underline ml-1">ThomasLab's</a>
         </div>
     </footer>
 
     <script>
+        // مقاس الصفحة والمقاس الفعلي للكارت — مشترك بين وجه وظهر الكارت
+        const PAGE_W = 92, PAGE_H = 58;   // مم - مقاس الصفحة الكاملة (بهامش أمان للقص)
+        const CARD_W = 86, CARD_H = 54;   // مم - مقاس الكارت الفعلي بعد القص
+
+        // نظام إحداثيات منطقي 10px = 1مم
+        const CW = CARD_W * 10, CH = CARD_H * 10;   // 860x540 — مساحة الكارت الفعلية (يُرسم فيها المحتوى)
+        const BW = PAGE_W * 10, BH = PAGE_H * 10;   // 920x580 — الكانفاس الكامل بهامش الأمان (Bleed)
+        const TRIM_X = (BW - CW) / 2, TRIM_Y = (BH - CH) / 2; // إزاحة بداية الكارت الفعلي داخل الكانفاس (30, 20)
+
+        function setupCardCanvas() {
+            const canvas = document.getElementById('finalCanvas');
+            const ctx = canvas.getContext('2d', { alpha: false });
+            const renderScale = 4; // معامل تكبير للحصول على دقة طباعة عالية (Supersampling)
+            canvas.width = BW * renderScale;
+            canvas.height = BH * renderScale;
+            ctx.scale(renderScale, renderScale);
+            return { canvas, ctx };
+        }
+
+        const loadImg = async (file, defaultPath) => {
+            if (file) return new Promise(r => { const fr = new FileReader(); fr.onload=e=>r(e.target.result); fr.readAsDataURL(file); });
+            try {
+                const response = await fetch(defaultPath);
+                if(response.ok) {
+                    const blob = await response.blob();
+                    return new Promise(r => { const fr = new FileReader(); fr.onload=e=>r(e.target.result); fr.readAsDataURL(blob); });
+                }
+            } catch(e) { console.warn("Asset not found:", defaultPath); }
+            return null;
+        };
+
+        function wrapText(ctx, text, maxWidth, font) {
+            ctx.font = font;
+            const words = text.split(' ');
+            const lines = [];
+            let current = '';
+            words.forEach(word => {
+                const test = current ? current + ' ' + word : word;
+                if (ctx.measureText(test).width > maxWidth && current) {
+                    lines.push(current);
+                    current = word;
+                } else {
+                    current = test;
+                }
+            });
+            if (current) lines.push(current);
+            return lines;
+        }
+
         function updateLevelTheme() {
             const select = document.getElementById('t5LevelSelect');
             const selectedOption = select.options[select.selectedIndex];
@@ -159,31 +249,8 @@
             elements.bar.style.width = "0%";
             elements.percentTxt.innerText = "0%";
 
-            const darkenColor = (hex, percent) => {
-                let r = parseInt(hex.slice(1, 3), 16),
-                    g = parseInt(hex.slice(3, 5), 16),
-                    b = parseInt(hex.slice(5, 7), 16);
-                r = Math.floor(r * (1 - percent));
-                g = Math.floor(g * (1 - percent));
-                b = Math.floor(b * (1 - percent));
-                return `rgb(${r}, ${g}, ${b})`;
-            };
-            const darkThemeColor = darkenColor(elements.themeColor, 0.3);
-
             try {
                 elements.actionTxt.innerText = "Preparing Assets...";
-                
-                const loadImg = async (file, defaultPath) => {
-                    if (file) return new Promise(r => { const fr = new FileReader(); fr.onload=e=>r(e.target.result); fr.readAsDataURL(file); });
-                    try {
-                        const response = await fetch(defaultPath);
-                        if(response.ok) {
-                            const blob = await response.blob();
-                            return new Promise(r => { const fr = new FileReader(); fr.onload=e=>r(e.target.result); fr.readAsDataURL(blob); });
-                        }
-                    } catch(e) { console.warn("Asset not found:", defaultPath); }
-                    return null;
-                };
 
                 const sLogoImg = await loadImg(elements.sLogoInput, '1.png');
                 const lLogoImg = await loadImg(elements.lLogoInput, '2.png');
@@ -205,8 +272,8 @@
                     json.forEach((row, index) => {
                         if (index === 0) return;
 
-                        let nameVal = row['C'] ? String(row['C']).trim() : "-----------------";
-                        let codeVal = row['Q'] ? String(row['Q']).trim() : "";
+                        let codeVal = row['A'] ? String(row['A']).trim() : "";
+                        let nameVal = row['B'] ? String(row['B']).trim() : "-----------------";
 
                         if (nameVal === "-----------------" && codeVal === "") return;
 
@@ -230,21 +297,7 @@
                 }
 
                 const { jsPDF } = window.jspdf;
-                const cardW = 65, cardH = 40;
-                const cols = 3, rows = 7;
-                const spacing = 0.2;
-
-                const totalWidth = (cols * cardW) + ((cols - 1) * spacing);
-                const totalHeight = (rows * cardH) + ((rows - 1) * spacing);
-                const marginX = (210 - totalWidth) / 2;
-                const marginY = (297 - totalHeight) / 2;
-
-                const canvas = document.getElementById('finalCanvas');
-                const ctx = canvas.getContext('2d', { alpha: false });
-                const renderScale = 4;
-                canvas.width = 650 * renderScale; 
-                canvas.height = 400 * renderScale; 
-                ctx.scale(renderScale, renderScale);
+                const { canvas, ctx } = setupCardCanvas();
 
                 let processedCount = 0;
 
@@ -253,8 +306,7 @@
                     const sheetCards = sheetsData[sheetName];
                     
                     // إنشاء مستند PDF جديد لهذا الشيت
-                    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4', compress: true });
-                    let currentCol = 0, currentRow = 0;
+                    const doc = new jsPDF({ orientation: 'l', unit: 'mm', format: [PAGE_W, PAGE_H], compress: true });
 
                     for(let i=0; i < sheetCards.length; i++) {
                         const cardData = sheetCards[i];
@@ -286,92 +338,78 @@
                         await new Promise(res => setTimeout(res, 50));
                         const qrCanvas = qrContainer.querySelector('canvas');
 
-                        // 1. Draw Card Background
-                        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                        // 1. خلفية الكارت تمتد لكامل الكانفاس (هامش الأمان + مساحة الكارت) بدون أي هامش أبيض
+                        const gradient = ctx.createLinearGradient(0, 0, 0, BH);
                         gradient.addColorStop(0, "#FFFFFF");
                         gradient.addColorStop(1, "#F0F4F8");
                         ctx.fillStyle = gradient;
-                        ctx.fillRect(0, 0, 650, 400);
+                        ctx.fillRect(0, 0, BW, BH);
 
-                        // 2. Header Strip
-                        ctx.fillStyle = darkThemeColor;
-                        ctx.fillRect(0, 0, 650, 35);
+                        // 2. الشريط العلوي/السفلي يمتد داخل هامش الأمان لحافة الصفحة،
+                        // لكن ارتفاعه المرئي بعد القص هو نفسه المصمم (47 و14) بالظبط من بداية مقاس الكارت
+                        ctx.fillStyle = elements.themeColor;
+                        ctx.fillRect(0, 0, BW, TRIM_Y + 47);
+                        ctx.fillRect(0, TRIM_Y + CH - 14, BW, BH - (TRIM_Y + CH - 14));
+
+                        // باقي المحتوى يُرسم بإحداثياته الأصلية داخل مساحة الكارت الفعلية بالظبط
+                        ctx.save();
+                        ctx.translate(TRIM_X, TRIM_Y);
 
                         // 3. Logos Rendering
-                        const logoSize = 88;
+                        const logoSize = 118, logoY = 74;
                         if(sLogoImg) {
                             const img = await new Promise(r => {const i=new Image(); i.onload=()=>r(i); i.src=sLogoImg;});
-                            ctx.drawImage(img, 650 - 115, 55, logoSize, logoSize); 
+                            ctx.drawImage(img, CW - 36 - logoSize, logoY, logoSize, logoSize);
                         }
                         if(lLogoImg) {
                             const img = await new Promise(r => {const i=new Image(); i.onload=()=>r(i); i.src=lLogoImg;});
-                            ctx.drawImage(img, 27, 55, logoSize, logoSize); 
+                            ctx.drawImage(img, 36, logoY, logoSize, logoSize);
                         }
 
                         // 4. Identity Text
                         ctx.textAlign = "center";
-                        ctx.font = "bold 32px Cairo"; 
+                        ctx.font = "bold 43px Cairo";
                         ctx.fillStyle = "#1A1A1A";
-                        ctx.fillText(sName, 325, 80);
-                        
-                        ctx.font = "24px Cairo"; 
+                        ctx.fillText(sName, CW / 2, 108);
+
+                        ctx.font = "32px Cairo";
                         ctx.fillStyle = "#6B7280";
-                        ctx.fillText(lName, 325, 115);
+                        ctx.fillText(lName, CW / 2, 155);
 
                         // Divider Line
                         ctx.strokeStyle = "#E5E7EB";
                         ctx.lineWidth = 2;
                         ctx.beginPath();
-                        ctx.moveTo(150, 135);
-                        ctx.lineTo(500, 135);
+                        ctx.moveTo(199, 182);
+                        ctx.lineTo(662, 182);
                         ctx.stroke();
 
                         // 5. QR Code Box
-                        const qrBoxSize = 200, qrX = 40, qrY = 160, radius = 15;
+                        const qrBoxSize = 267, qrX = 53, qrY = 216, radius = 20;
                         ctx.fillStyle = "white";
-                        ctx.shadowBlur = 10; ctx.shadowColor = "rgba(0,0,0,0.08)";
+                        ctx.shadowBlur = 12; ctx.shadowColor = "rgba(0,0,0,0.08)";
                         ctx.beginPath();
                         ctx.roundRect(qrX, qrY, qrBoxSize, qrBoxSize, radius);
                         ctx.fill();
                         ctx.shadowBlur = 0;
-                        ctx.drawImage(qrCanvas, qrX + 15, qrY + 15, 170, 170);
+                        ctx.drawImage(qrCanvas, qrX + 20, qrY + 20, 227, 227);
 
-                        // 6. User Data (Name, Code, Sheet Name)
+                        // 6. User Data (Name, Code)
                         ctx.textAlign = "right";
-                        
-                        ctx.font = "bold 38px Cairo";
+
+                        ctx.font = "bold 51px Cairo";
                         ctx.fillStyle = elements.themeColor;
-                        ctx.fillText(nameVal.split(' ').slice(0, 3).join(' '), 610, 220); 
-                        
-                        ctx.font = "bold 28px Cairo";
+                        ctx.fillText(nameVal.split(' ').slice(0, 3).join(' '), 807, 315);
+
+                        ctx.font = "bold 38px Cairo";
                         ctx.fillStyle = "#4B5563";
-                        ctx.fillText(`كود: ${displayCode}`, 610, 280); 
+                        ctx.fillText(`كود: ${displayCode}`, 807, 397);
 
-                        ctx.font = "bold 22px Cairo";
-                        ctx.fillStyle = "#6B7280";
-                        ctx.fillText(`${sheetName}`, 610, 330);
+                        ctx.restore();
 
-                        // 7. Composite to PDF
-                        const xPos = marginX + (currentCol * (cardW + spacing));
-                        const yPos = marginY + (currentRow * (cardH + spacing));
-                        doc.addImage(canvas.toDataURL("image/png"), 'PNG', xPos, yPos, cardW, cardH, undefined, 'FAST');
-                        
-                        // Draw cutting guides
-                        doc.setDrawColor(230, 230, 230);
-                        doc.setLineWidth(0.1);
-                        doc.rect(xPos, yPos, cardW, cardH); 
-
-                        // Grid Logic
-                        currentCol++; 
-                        if(currentCol >= cols) { 
-                            currentCol = 0; 
-                            currentRow++; 
-                        }
-                        if(currentRow >= rows && i < sheetCards.length - 1) { 
-                            doc.addPage(); 
-                            currentCol = 0; 
-                            currentRow = 0; 
-                        }
+                        // 7. Composite to PDF — الكانفاس يطابق مقاس الصفحة بالظبط (بدون تمديد/تشويه)
+                        if (i > 0) doc.addPage([PAGE_W, PAGE_H], 'l');
+                        doc.addImage(canvas.toDataURL("image/png"), 'PNG', 0, 0, PAGE_W, PAGE_H, undefined, 'FAST');
                     }
 
                     // حفظ الملف الخاص بالتابة الحالية
@@ -386,6 +424,160 @@
             } catch (err) {
                 console.error("Generator Error:", err);
                 elements.statusTxt.innerText = "❌ حدث خطأ: " + err.message;
+            }
+        }
+
+        async function generateCardBack() {
+            const statusTxt = document.getElementById('statusT5Back');
+            const logoFile = document.getElementById('backLogo').files[0];
+            const copies = Math.max(1, parseInt(document.getElementById('backCopies').value) || 1);
+            const themeColor = document.getElementById('t5Color').value;
+            const items = document.getElementById('backInstructions').value
+                .split('\n').map(l => l.trim()).filter(Boolean);
+
+            if (items.length === 0) return alert("يرجى كتابة بند واحد على الأقل");
+
+            statusTxt.innerText = "⏳ جاري إنشاء ظهر الكارت...";
+
+            try {
+                const logoImg = await loadImg(logoFile, 'back-logo.png');
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: 'l', unit: 'mm', format: [PAGE_W, PAGE_H], compress: true });
+                const { canvas, ctx } = setupCardCanvas();
+
+                // 1. خلفية الكارت تمتد لكامل الكانفاس (هامش الأمان + مساحة الكارت) بدون أي هامش أبيض
+                const gradient = ctx.createLinearGradient(0, 0, 0, BH);
+                gradient.addColorStop(0, "#FFFFFF");
+                gradient.addColorStop(1, "#F0F4F8");
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, BW, BH);
+
+                // 2. الشريط العلوي/السفلي يمتد داخل هامش الأمان لحافة الصفحة،
+                // لكن ارتفاعه المرئي بعد القص هو نفسه المصمم (47 و14) بالظبط من بداية مقاس الكارت
+                ctx.fillStyle = themeColor;
+                ctx.fillRect(0, 0, BW, TRIM_Y + 47);
+                ctx.fillRect(0, TRIM_Y + CH - 14, BW, BH - (TRIM_Y + CH - 14));
+
+                // باقي المحتوى يُرسم بإحداثياته الأصلية داخل مساحة الكارت الفعلية بالظبط
+                ctx.save();
+                ctx.translate(TRIM_X, TRIM_Y);
+
+                // 3. اللوجو كخلفية شفافة (Watermark) خلف النصوص
+                if (logoImg) {
+                    const img = await new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = logoImg; });
+                    const wmSize = 420;
+                    ctx.save();
+                    ctx.globalAlpha = 0.14;
+                    ctx.drawImage(img, (CW - wmSize) / 2, (CH - wmSize) / 2 + 10, wmSize, wmSize);
+                    ctx.restore();
+                }
+
+                ctx.textAlign = "center";
+                ctx.font = "bold 26px Cairo";
+                ctx.fillStyle = "#FFFFFF";
+                ctx.fillText("بنود والتزامات الخدمة", CW / 2, 31);
+
+                // 4. قائمة البنود: كل بند "عنوان: وصف" — العنوان بارز، وتوزيع متساوٍ يملأ ارتفاع الكارت
+                // كامل (بدل التكدس أعلى الكارت)، مع تصغير الخط تلقائيًا لو عدد/طول البنود كبير
+                const maxWidth = 740, textRightX = 780, badgeX = 812;
+                const topContentY = 66, bottomLimit = CH - 14 - 14;
+                const availableHeight = bottomLimit - topContentY;
+
+                const parsedItems = items.slice(0, 9).map(raw => {
+                    const sep = raw.indexOf(':');
+                    return sep >= 0
+                        ? { title: raw.slice(0, sep).trim(), desc: raw.slice(sep + 1).trim() }
+                        : { title: '', desc: raw.trim() };
+                });
+
+                const wrapWithTitle = (fontSize) => {
+                    const font = `${fontSize}px Cairo`, titleFont = `bold ${fontSize}px Cairo`;
+                    return parsedItems.map(({ title, desc }) => {
+                        const titlePrefix = title ? title + ': ' : '';
+                        ctx.font = titleFont;
+                        const titleWidth = title ? ctx.measureText(titlePrefix).width : 0;
+                        ctx.font = font;
+                        const lines = [];
+                        let current = '', maxW = title ? Math.max(120, maxWidth - titleWidth) : maxWidth;
+                        desc.split(' ').forEach(word => {
+                            const test = current ? current + ' ' + word : word;
+                            if (ctx.measureText(test).width > maxW && current) {
+                                lines.push(current);
+                                current = word;
+                                maxW = maxWidth;
+                            } else {
+                                current = test;
+                            }
+                        });
+                        if (current) lines.push(current);
+                        return { title, titlePrefix, titleWidth, lines };
+                    });
+                };
+
+                let fontSize = 19, lineHeight = 0, laidOut = [];
+                for (; fontSize >= 13; fontSize--) {
+                    lineHeight = Math.round(fontSize * 1.32);
+                    laidOut = wrapWithTitle(fontSize);
+                    const totalLines = laidOut.reduce((s, it) => s + it.lines.length, 0);
+                    const needed = totalLines * lineHeight + (parsedItems.length - 1) * 6;
+                    if (needed <= availableHeight) break;
+                }
+
+                const totalLines = laidOut.reduce((s, it) => s + it.lines.length, 0);
+                const contentHeight = totalLines * lineHeight;
+                const gapSlots = Math.max(1, parsedItems.length - 1);
+                const gapBetween = Math.max(6, (availableHeight - contentHeight) / gapSlots);
+                const badgeR = Math.max(11, Math.round(fontSize * 0.72));
+
+                let cursorY = topContentY + lineHeight * 0.72;
+
+                laidOut.forEach((item, idx) => {
+                    ctx.beginPath();
+                    ctx.arc(badgeX, cursorY - lineHeight * 0.32, badgeR, 0, Math.PI * 2);
+                    ctx.fillStyle = themeColor;
+                    ctx.fill();
+                    ctx.textAlign = "center";
+                    ctx.font = `bold ${Math.max(12, fontSize - 2)}px Cairo`;
+                    ctx.fillStyle = "#FFFFFF";
+                    ctx.fillText(String(idx + 1), badgeX, cursorY);
+
+                    ctx.textAlign = "right";
+                    if (item.title) {
+                        ctx.font = `bold ${fontSize}px Cairo`;
+                        ctx.fillStyle = themeColor;
+                        ctx.fillText(item.titlePrefix, textRightX, cursorY);
+                        ctx.font = `${fontSize}px Cairo`;
+                        ctx.fillStyle = "#374151";
+                        ctx.fillText(item.lines[0] || '', textRightX - item.titleWidth, cursorY);
+                    } else {
+                        ctx.font = `${fontSize}px Cairo`;
+                        ctx.fillStyle = "#374151";
+                        ctx.fillText(item.lines[0] || '', textRightX, cursorY);
+                    }
+
+                    ctx.font = `${fontSize}px Cairo`;
+                    ctx.fillStyle = "#374151";
+                    item.lines.slice(1).forEach((line, li) => {
+                        ctx.fillText(line, textRightX, cursorY + (li + 1) * lineHeight);
+                    });
+
+                    cursorY += item.lines.length * lineHeight + gapBetween;
+                });
+
+                ctx.restore();
+
+                // 5. تصدير PDF — الكانفاس يطابق مقاس الصفحة بالظبط (بدون تمديد/تشويه)
+                const dataUrl = canvas.toDataURL("image/png");
+                for (let i = 0; i < copies; i++) {
+                    if (i > 0) doc.addPage([PAGE_W, PAGE_H], 'l');
+                    doc.addImage(dataUrl, 'PNG', 0, 0, PAGE_W, PAGE_H, undefined, 'FAST');
+                }
+
+                doc.save(`${document.getElementById('backFileName').value || 'Card_Back'}.pdf`);
+                statusTxt.innerText = "✅ تم إنشاء ظهر الكارت بنجاح!";
+            } catch (err) {
+                console.error("Back Generator Error:", err);
+                statusTxt.innerText = "❌ حدث خطأ: " + err.message;
             }
         }
     </script>
