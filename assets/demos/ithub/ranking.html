@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Full Ranking - IT Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="../shared/chart.umd.js"></script>
+<script src="../shared/demo-runtime.js"></script>
+<script src="assets/js/demo-data.js"></script>
+</head>
+<body>
+  <div class="app-shell-v2">
+
+    <header class="topbar-main">
+      <a href="index.html" class="tb-brand">
+        <span class="logo-dot"></span>
+        <span class="site-title">IT Hub</span>
+      </a>
+
+      <div class="tb-right">
+        <button type="button" class="tb-search-toggle" id="searchToggleBtn" title="Search">&#128269;</button>
+        <div class="tb-search" id="tbSearchWrap" style="display:none;">
+          <input type="text" id="f_search" placeholder="Search tickets, technicians…">
+        </div>
+
+        <div class="tb-group">
+          <span id="groupStaticLabel" class="group-static-label" style="display:none;"></span>
+          <div class="msel msel-compact" id="ms_ticket_group" data-key="ticket_group">
+            <button type="button" class="msel-toggle">
+              <span class="msel-label">All Groups</span>
+              <span class="chev">&#9662;</span>
+            </button>
+            <div class="msel-panel">
+              <input type="text" class="msel-search" placeholder="Search groups…">
+              <div class="msel-options"></div>
+              <div class="msel-actions">
+                <button type="button" class="msel-clear">Clear</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tb-user">
+          <div class="user-avatar" tabindex="0">D</div>
+          <div class="user-dropdown">
+            <strong>Demo Manager</strong>
+            <a href="change_password.php" class="btn-ghost btn-sm">Change Password</a>
+            <a href="logout.php" class="btn-ghost btn-sm">Sign Out</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content-v2">
+      <div class="page-body">
+
+
+<div class="panel">
+  <div class="ranking-head">
+    <h3 id="rankingTitle">Full Ranking</h3>
+    <div class="f-group f-search-inline">
+      <input type="text" id="rankingSearch" placeholder="Filter this list…">
+    </div>
+  </div>
+  <ul class="rank-list" id="rankingList">
+    <li class="empty-state">Loading…</li>
+  </ul>
+</div>
+
+<script src="assets/js/app.js"></script>
+<script>
+(function () {
+  const params = new URLSearchParams(window.location.search);
+  const dim = params.get('dim') || '';
+  document.getElementById('rankingTitle').textContent = 'Loading…';
+
+  ITHub.initAllMultiSelects();
+  ITHub.loadFilterMeta();
+
+  let allRows = [];
+
+  /** Rebuilds a filters object from this page's own URL (the dashboard filters it was opened with). */
+  function baseFiltersFromParams() {
+    const filters = {};
+    ['site', 'technician', 'department', 'category', 'requester', 'ticket_group', 'months', 'request_type'].forEach(key => {
+      const values = params.getAll(`${key}[]`);
+      if (values.length) filters[key] = values;
+    });
+    ['date_from', 'date_to', 'search'].forEach(key => {
+      const v = params.get(key);
+      if (v) filters[key] = v;
+    });
+    ['overdue', 'reopened', 'first_response_overdue'].forEach(key => {
+      const v = params.get(key);
+      if (v) filters[key] = v;
+    });
+    return filters;
+  }
+  const baseFilters = baseFiltersFromParams();
+
+  const TECHNICIAN_DIMS = new Set(['technician', 'overdue_technician', 'technician_fastest', 'technician_highest_rated']);
+
+  function renderList(rows) {
+    const el = document.getElementById('rankingList');
+    if (!rows || rows.length === 0) {
+      el.innerHTML = '<li class="empty-state">No data</li>';
+      return;
+    }
+    const max = Math.max(...rows.map(r => Number(r.value)), 1);
+    const min = Math.min(...rows.map(r => Number(r.value)));
+    const isTechDim = TECHNICIAN_DIMS.has(dim);
+    // On an SLA-speed ranking a SMALLER number is the better result, so the
+    // bar has to grow towards the best row, not the largest number.
+    const lowerIsBetter = rows.some(r => r.lower_is_better);
+    el.innerHTML = rows.map((r, i) => {
+      const v = Number(r.value);
+      const pct = lowerIsBetter
+        ? Math.max(4, Math.round((min / (v || min || 1)) * 100))
+        : Math.max(4, Math.round((v / max) * 100));
+      const tint = `linear-gradient(to right, rgba(147,163,189,0.16) ${pct}%, transparent ${pct}%), var(--bg-panel-alt)`;
+      const ticketsHref = ITHub.ticketsLinkFor(ITHub.rowDrillThroughParams(dim, r.label), baseFilters);
+      const nameHref = isTechDim ? `technician.html?name=${encodeURIComponent(r.label ?? '')}` : ticketsHref;
+      const valueText = r.display !== undefined ? ITHub.escapeHtml(r.display) : Number(r.value).toLocaleString();
+      const meta = r.meta ? `<span class="rank-meta">${ITHub.escapeHtml(r.meta)}</span>` : '';
+      return `
+        <li class="rank-row" style="background:${tint};">
+          <a class="rank-name-link" href="${nameHref}" title="${isTechDim ? 'View technician profile' : 'View these tickets'}">
+            <span class="rank-index">${i + 1}</span> ${ITHub.escapeHtml(r.label ?? '—')}${meta}
+          </a>
+          <a class="rank-value-link" href="${ticketsHref}" title="View these tickets">${valueText}</a>
+        </li>
+      `;
+    }).join('');
+  }
+
+  document.getElementById('rankingSearch').addEventListener('input', (e) => {
+    const needle = e.target.value.trim().toLowerCase();
+    const filtered = needle
+      ? allRows.filter(r => (r.label ?? '').toLowerCase().includes(needle))
+      : allRows;
+    renderList(filtered);
+  });
+
+  (async () => {
+    try {
+      const res = await fetch('api/ranking_full.php?' + params.toString(), { credentials: 'same-origin' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Request failed');
+
+      document.getElementById('rankingTitle').textContent = data.title + ' — Full Ranking';
+      document.title = data.title + ' - Full Ranking';
+      allRows = data.rows || [];
+      renderList(allRows);
+    } catch (err) {
+      document.getElementById('rankingList').innerHTML =
+        `<li class="empty-state">Failed to load: ${ITHub.escapeHtml(err.message)}</li>`;
+    }
+  })();
+})();
+</script>
+
+
+      </div>
+      <footer class="app-footer">Powered by ThomasLab's</footer>
+    </main>
+  </div>
+  <script>
+    (function () {
+      var btn = document.getElementById('searchToggleBtn');
+      var wrap = document.getElementById('tbSearchWrap');
+      if (btn && wrap) {
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var isOpen = wrap.style.display !== 'none';
+          wrap.style.display = isOpen ? 'none' : '';
+          if (!isOpen) {
+            var input = document.getElementById('f_search');
+            if (input) input.focus();
+          }
+        });
+
+        document.addEventListener('click', function (e) {
+          if (wrap.style.display !== 'none' && !wrap.contains(e.target) && e.target !== btn) {
+            wrap.style.display = 'none';
+          }
+        });
+      }
+
+      var userWrap = document.querySelector('.tb-user');
+      var avatar = document.querySelector('.user-avatar');
+      if (userWrap && avatar) {
+        avatar.addEventListener('click', function (e) {
+          e.stopPropagation();
+          userWrap.classList.toggle('open');
+        });
+
+        avatar.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            userWrap.classList.toggle('open');
+          }
+        });
+
+        document.addEventListener('click', function (e) {
+          if (userWrap.classList.contains('open') && !userWrap.contains(e.target)) {
+            userWrap.classList.remove('open');
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

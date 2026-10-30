@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Technician Profile - IT Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="../shared/chart.umd.js"></script>
+<script src="../shared/demo-runtime.js"></script>
+<script src="assets/js/demo-data.js"></script>
+</head>
+<body>
+  <div class="app-shell-v2">
+
+    <header class="topbar-main">
+      <a href="index.html" class="tb-brand">
+        <span class="logo-dot"></span>
+        <span class="site-title">IT Hub</span>
+      </a>
+
+      <div class="tb-right">
+        <button type="button" class="tb-search-toggle" id="searchToggleBtn" title="Search">&#128269;</button>
+        <div class="tb-search" id="tbSearchWrap" style="display:none;">
+          <input type="text" id="f_search" placeholder="Search tickets, technicians…">
+        </div>
+
+        <div class="tb-group">
+          <span id="groupStaticLabel" class="group-static-label" style="display:none;"></span>
+          <div class="msel msel-compact" id="ms_ticket_group" data-key="ticket_group">
+            <button type="button" class="msel-toggle">
+              <span class="msel-label">All Groups</span>
+              <span class="chev">&#9662;</span>
+            </button>
+            <div class="msel-panel">
+              <input type="text" class="msel-search" placeholder="Search groups…">
+              <div class="msel-options"></div>
+              <div class="msel-actions">
+                <button type="button" class="msel-clear">Clear</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tb-user">
+          <div class="user-avatar" tabindex="0">D</div>
+          <div class="user-dropdown">
+            <strong>Demo Manager</strong>
+            <a href="change_password.php" class="btn-ghost btn-sm">Change Password</a>
+            <a href="logout.php" class="btn-ghost btn-sm">Sign Out</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content-v2">
+      <div class="page-body">
+
+
+
+
+  <div class="ranking-head">
+    <h3 style="margin:0;" id="techPageTitle"></h3>
+    <span></span>
+  </div>
+
+  
+  <div class="kpi-grid" id="techKpiGrid">
+    <div class="empty-state">Loading…</div>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <h3>Performance Profile <small>speed &amp; SLA measured against each ticket's own SLA; volume &amp; rating relative to technicians you can see</small></h3>
+      <div class="chart-wrap"><canvas id="chartRadar"></canvas></div>
+      <ul class="radar-captions" id="radarCaptions"></ul>
+    </div>
+    <div class="panel">
+      <h3>Performance Trend <small>last 6 months</small></h3>
+      <div class="chart-wrap"><canvas id="chartTechTrend"></canvas></div>
+    </div>
+  </div>
+
+
+
+<script>(function(){var n=new URLSearchParams(location.search).get('name')||'Sara Hassan';if(!new URLSearchParams(location.search).get('name')){history.replaceState(null,'','?name='+encodeURIComponent(n));}document.getElementById('techPageTitle').textContent=n;document.title=n+' - IT Hub';})();</script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/technician.js"></script>
+
+
+      </div>
+      <footer class="app-footer">Powered by ThomasLab's</footer>
+    </main>
+  </div>
+  <script>
+    (function () {
+      var btn = document.getElementById('searchToggleBtn');
+      var wrap = document.getElementById('tbSearchWrap');
+      if (btn && wrap) {
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var isOpen = wrap.style.display !== 'none';
+          wrap.style.display = isOpen ? 'none' : '';
+          if (!isOpen) {
+            var input = document.getElementById('f_search');
+            if (input) input.focus();
+          }
+        });
+
+        document.addEventListener('click', function (e) {
+          if (wrap.style.display !== 'none' && !wrap.contains(e.target) && e.target !== btn) {
+            wrap.style.display = 'none';
+          }
+        });
+      }
+
+      var userWrap = document.querySelector('.tb-user');
+      var avatar = document.querySelector('.user-avatar');
+      if (userWrap && avatar) {
+        avatar.addEventListener('click', function (e) {
+          e.stopPropagation();
+          userWrap.classList.toggle('open');
+        });
+
+        avatar.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            userWrap.classList.toggle('open');
+          }
+        });
+
+        document.addEventListener('click', function (e) {
+          if (userWrap.classList.contains('open') && !userWrap.contains(e.target)) {
+            userWrap.classList.remove('open');
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

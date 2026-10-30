@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Devices - L-CONFIG PRO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="../shared/chart.umd.js"></script>
+<script src="../shared/demo-runtime.js"></script>
+<script src="assets/js/demo-data.js"></script>
+</head>
+<body>
+  <div class="app-shell-v2">
+
+    <header class="topbar-main">
+      <a href="technician.html" class="tb-brand">
+        <span class="logo-dot"></span>
+        <span class="site-title">L-CONFIG PRO</span>
+      </a>
+
+      <div class="tb-right">
+        <nav class="tb-nav"><a href="technician.html" class="active">My Devices</a></nav>
+
+        <div class="tb-user">
+          <div class="user-avatar" tabindex="0">A</div>
+          <div class="user-dropdown">
+            <strong>Ahmed Reda</strong>
+            <span class="role-pill role-technician">Technician</span>
+            <a href="change_password.php" class="btn-ghost btn-sm">Change Password</a>
+            <a href="logout.php" class="btn-ghost btn-sm">Sign Out</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content-v2">
+      <div class="page-head">
+        <h1>My Devices</h1>
+        <p>Devices you are configuring, plus anything sent back to you by audit</p>
+      </div>
+      <div class="page-body">
+
+<meta name="csrf-token" content="demo-token">
+
+<div class="kpi-grid" id="techKpiGrid">
+  <div class="empty-state">Loading…</div>
+</div>
+
+<div class="ranking-head" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+  <h3 style="margin:0;">Devices</h3>
+  <button type="button" class="btn" id="newDeviceBtn">+ Start New Device</button>
+</div>
+
+<div id="deviceGrid" class="device-card-grid">
+  <div class="empty-state">Loading…</div>
+</div>
+
+
+<div id="newDeviceModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box" style="width:620px; max-height:92vh; overflow-y:auto;">
+    <div class="modal-head">
+      <h3>Start New Device</h3>
+      <button class="btn-ghost btn-sm" id="closeNewDeviceModal">&#10005; Close</button>
+    </div>
+    <div id="newDeviceError" class="login-error" style="display:none;"></div>
+
+    
+    <div class="src-picker" id="nd_source_picker">
+      <label class="src-option selected" data-source="project">
+        <input type="radio" name="nd_source" value="project" checked>
+        <strong>From a project</strong>
+        <span>Pick it off an imported delivery list</span>
+      </label>
+      <label class="src-option" data-source="single">
+        <input type="radio" name="nd_source" value="single">
+        <strong>On its own</strong>
+        <span>A single device, not part of a batch</span>
+      </label>
+    </div>
+
+    
+    <div id="nd_project_pane">
+      <div class="login-field">
+        <label>Project</label>
+        <select id="nd_project"><option value="">Loading…</option></select>
+        <div id="nd_project_summary" class="field-hint"></div>
+      </div>
+
+      <div class="login-field">
+        
+        <label for="nd_serial_search">Find the device</label>
+        <input type="text" id="nd_serial_search" autocomplete="off"
+               placeholder="Type any part of the serial, name or model…">
+        <div id="nd_search_hint" class="field-hint"></div>
+      </div>
+
+      <div id="nd_project_results" class="pick-list"></div>
+
+      <div id="nd_chosen" class="chosen-device" style="display:none;"></div>
+
+      
+      <details class="opt-block" id="nd_project_optional">
+        <summary>Assign it to someone now (optional)</summary>
+        <div class="login-field">
+          <label>Department / Job Function <span class="opt-tag">optional</span></label>
+          <select id="nd_p_department"></select>
+        </div>
+        <div class="login-field">
+          <label>End User Name <span class="opt-tag">optional</span></label>
+          <input type="text" id="nd_p_end_user" maxlength="120">
+        </div>
+        <div class="login-field">
+          <label id="nd_p_name_label">Computer Name <span class="opt-tag">optional</span></label>
+          <input type="text" id="nd_p_comp_name" maxlength="80"
+                 placeholder="Leave blank to keep the serial as its name">
+        </div>
+      </details>
+
+      <button type="button" class="btn login-btn" id="nd_claim_btn" disabled>
+        Select a device to start
+      </button>
+    </div>
+
+    
+    <form id="newDeviceForm" style="display:none;">
+      
+      <label style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted); display:block; margin-bottom:8px;">Device Type</label>
+      <div id="nd_type_picker" class="dt-picker"></div>
+
+      <div class="login-field">
+        <label>Device Model</label>
+        <input type="text" id="nd_model" required maxlength="120" placeholder="e.g. HP 600 G4 i5-8th">
+      </div>
+      <div class="login-field">
+        <label>Serial Number</label>
+        <input type="text" id="nd_serial" required maxlength="80">
+      </div>
+
+      
+      <details class="opt-block">
+        <summary>Name, department and end user (optional)</summary>
+        <div class="login-field">
+          
+          <label id="nd_name_label">Computer Name</label>
+          <input type="text" id="nd_comp_name" maxlength="80"
+                 placeholder="Leave blank to use the serial number">
+        </div>
+        <div class="login-field">
+          <label>Department / Job Function</label>
+          <select id="nd_department"></select>
+        </div>
+        <div class="login-field">
+          <label>End User Name</label>
+          <input type="text" id="nd_end_user" maxlength="120">
+        </div>
+      </details>
+
+      <div id="nd_spec_hint" class="spec-check-box" style="margin-bottom:14px;"></div>
+
+      <details class="opt-block">
+        <summary>Record the specification now (optional)</summary>
+        <p class="field-hint" style="margin:0 0 12px;">
+          You do not have to fill any of this in. The checklist asks for the memory, the storage
+          type, the biometrics and the rest as inspection steps — which is when you actually have
+          the machine in front of you.
+        </p>
+        
+        <div id="nd_spec_fields"></div>
+      </details>
+
+      <button type="submit" class="btn login-btn">Create &amp; Start Checklist</button>
+    </form>
+  </div>
+</div>
+
+<script src="assets/js/app.js"></script>
+<script src="assets/js/technician.js"></script>
+
+
+      </div>
+      <footer class="app-footer">Powered by ThomasLab's</footer>
+    </main>
+  </div>
+  <div id="toastHost" class="toast-host"></div>
+  <script>
+    (function () {
+      var userWrap = document.querySelector('.tb-user');
+      var avatar = document.querySelector('.user-avatar');
+      if (userWrap && avatar) {
+        avatar.addEventListener('click', function (e) {
+          e.stopPropagation();
+          userWrap.classList.toggle('open');
+        });
+        avatar.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            userWrap.classList.toggle('open');
+          }
+        });
+        document.addEventListener('click', function (e) {
+          if (userWrap.classList.contains('open') && !userWrap.contains(e.target)) {
+            userWrap.classList.remove('open');
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

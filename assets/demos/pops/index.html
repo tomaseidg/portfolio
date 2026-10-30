@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard - Printer Ops Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="../shared/chart.umd.js"></script>
+<script src="../shared/demo-runtime.js"></script>
+<script src="assets/js/demo-data.js"></script>
+</head>
+<body>
+  <div class="app-shell-v2">
+
+    <header class="topbar-main">
+      <a href="index.html" class="tb-brand">
+        <span class="logo-dot"></span>
+        <span class="site-title">Printer Ops Console</span>
+      </a>
+
+      <div class="tb-right">
+        <nav class="tb-nav"><a href="index.html" class="active">Dashboard</a><a href="printers.html" class="">Printers</a><a href="reports.html" class="">Reports</a><a href="alerts.html" class="">Alerts <span class="nav-badge">3</span></a></nav>
+
+        <div class="tb-user">
+          <div class="user-avatar" tabindex="0">D</div>
+          <div class="user-dropdown">
+            <strong>Demo Operator</strong>
+            <small>operator</small>
+            <a href="change_password.php" class="btn-ghost btn-sm">Change Password</a>
+            <a href="logout.php" class="btn-ghost btn-sm">Sign Out</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content-v2">
+      <div class="page-body">
+        <div class="page-head">
+          <h1>Dashboard</h1>
+          <p>Fleet health, status distribution, and page volume at a glance</p>
+        </div>
+
+
+<div class="kpi-grid" id="kpiGrid">
+  <div class="empty-state">Loading KPIs…</div>
+</div>
+
+<div class="grid-2">
+  <div class="panel">
+    <h3>Status Distribution</h3>
+    <div class="chart-wrap"><canvas id="chartStatus"></canvas></div>
+  </div>
+  <div class="panel">
+    <h3>Printers by Site</h3>
+    <div class="chart-wrap"><canvas id="chartBySite"></canvas></div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="panel" style="grid-column: 1 / -1;">
+    <h3>Pages Printed by Printer <small>last 30 days, every printer, highest to lowest</small></h3>
+    <div class="chart-wrap" id="chartPagesByPrinterWrap" style="height:420px; max-height:900px; overflow-y:auto;"><canvas id="chartPagesByPrinter"></canvas></div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="panel" style="grid-column: 1 / -1;">
+    <h3>Printing Cost by Cost Center <small>this month, USD</small></h3>
+    <div class="chart-wrap"><canvas id="chartCostByCostCenter"></canvas></div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="ranking-head">
+    <h3>Needs Attention</h3>
+    <a href="alerts.html" class="btn-ghost btn-sm">View all alerts &#8594;</a>
+  </div>
+  <ul class="rank-list" id="attentionList"></ul>
+</div>
+
+<script src="assets/js/app.js"></script>
+<script src="assets/js/dashboard.js"></script>
+
+
+      </div>
+      <footer class="app-footer">Powered by ThomasLab's</footer>
+    </main>
+  </div>
+  <script>
+    (function () {
+      var userWrap = document.querySelector('.tb-user');
+      var avatar = document.querySelector('.user-avatar');
+      if (userWrap && avatar) {
+        avatar.addEventListener('click', function (e) {
+          e.stopPropagation();
+          userWrap.classList.toggle('open');
+        });
+        avatar.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            userWrap.classList.toggle('open');
+          }
+        });
+        document.addEventListener('click', function (e) {
+          if (userWrap.classList.contains('open') && !userWrap.contains(e.target)) {
+            userWrap.classList.remove('open');
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard Overview - IT Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="../shared/chart.umd.js"></script>
+<script src="../shared/demo-runtime.js"></script>
+<script src="assets/js/demo-data.js"></script>
+</head>
+<body>
+  <div class="app-shell-v2">
+
+    <header class="topbar-main">
+      <a href="index.html" class="tb-brand">
+        <span class="logo-dot"></span>
+        <span class="site-title">IT Hub</span>
+      </a>
+
+      <div class="tb-right">
+        <button type="button" class="tb-search-toggle" id="searchToggleBtn" title="Search">&#128269;</button>
+        <div class="tb-search" id="tbSearchWrap" style="display:none;">
+          <input type="text" id="f_search" placeholder="Search tickets, technicians…">
+        </div>
+
+        <div class="tb-group">
+          <span id="groupStaticLabel" class="group-static-label" style="display:none;"></span>
+          <div class="msel msel-compact" id="ms_ticket_group" data-key="ticket_group">
+            <button type="button" class="msel-toggle">
+              <span class="msel-label">All Groups</span>
+              <span class="chev">&#9662;</span>
+            </button>
+            <div class="msel-panel">
+              <input type="text" class="msel-search" placeholder="Search groups…">
+              <div class="msel-options"></div>
+              <div class="msel-actions">
+                <button type="button" class="msel-clear">Clear</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tb-user">
+          <div class="user-avatar" tabindex="0">D</div>
+          <div class="user-dropdown">
+            <strong>Demo Manager</strong>
+            <a href="change_password.php" class="btn-ghost btn-sm">Change Password</a>
+            <a href="logout.php" class="btn-ghost btn-sm">Sign Out</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content-v2">
+      <div class="page-body">
+
+
+
+<div class="filters-bar" id="filtersBar">
+  <div class="f-group">
+    <label>From Date</label>
+    <input type="date" id="f_date_from">
+  </div>
+  <div class="f-group">
+    <label>To Date</label>
+    <input type="date" id="f_date_to">
+  </div>
+  
+    <div class="f-group">
+      <label>Month</label>
+      <div class="msel" id="ms_months" data-key="months">
+        <button type="button" class="msel-toggle">
+          <span class="msel-label">All</span>
+          <span class="chev">&#9662;</span>
+        </button>
+        <div class="msel-panel">
+          <input type="text" class="msel-search" placeholder="Search…">
+          <div class="msel-options"></div>
+          <div class="msel-actions">
+            <button type="button" class="msel-clear">Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="f-group">
+      <label>Quarter</label>
+      <div class="msel" id="ms_quarters" data-key="quarters">
+        <button type="button" class="msel-toggle">
+          <span class="msel-label">All</span>
+          <span class="chev">&#9662;</span>
+        </button>
+        <div class="msel-panel">
+          <input type="text" class="msel-search" placeholder="Search…">
+          <div class="msel-options"></div>
+          <div class="msel-actions">
+            <button type="button" class="msel-clear">Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="f-group">
+      <label>Site</label>
+      <div class="msel" id="ms_site" data-key="site">
+        <button type="button" class="msel-toggle">
+          <span class="msel-label">All</span>
+          <span class="chev">&#9662;</span>
+        </button>
+        <div class="msel-panel">
+          <input type="text" class="msel-search" placeholder="Search…">
+          <div class="msel-options"></div>
+          <div class="msel-actions">
+            <button type="button" class="msel-clear">Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="f-group">
+      <label>Department</label>
+      <div class="msel" id="ms_department" data-key="department">
+        <button type="button" class="msel-toggle">
+          <span class="msel-label">All</span>
+          <span class="chev">&#9662;</span>
+        </button>
+        <div class="msel-panel">
+          <input type="text" class="msel-search" placeholder="Search…">
+          <div class="msel-options"></div>
+          <div class="msel-actions">
+            <button type="button" class="msel-clear">Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="f-group">
+      <label>Technician</label>
+      <div class="msel" id="ms_technician" data-key="technician">
+        <button type="button" class="msel-toggle">
+          <span class="msel-label">All</span>
+          <span class="chev">&#9662;</span>
+        </button>
+        <div class="msel-panel">
+          <input type="text" class="msel-search" placeholder="Search…">
+          <div class="msel-options"></div>
+          <div class="msel-actions">
+            <button type="button" class="msel-clear">Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  <div class="f-group f-actions">
+    <button class="btn" id="applyFilters">Apply</button>
+    <button class="btn btn-ghost" id="resetFilters">Reset</button>
+  </div>
+</div>
+
+
+
+
+<div class="kpi-grid" id="kpiGrid">
+  <div class="empty-state">Loading KPIs…</div>
+</div>
+
+<p class="drill-hint">Every card, chart and ranking row is a link: click a bar, a slice or a point to open exactly the tickets behind it.</p>
+
+<div class="grid-2">
+  <div class="panel">
+    <h3>Ticket Volume <small id="monthlyRangeLabel">last 6 months</small></h3>
+    <div class="chart-wrap"><canvas id="chartMonthly6"></canvas></div>
+  </div>
+  <div class="panel">
+    <h3>Created By <small>System vs Technician · <span id="createdByRangeLabel">last 6 months</span></small></h3>
+    <div class="chart-wrap"><canvas id="chartCreatedBy"></canvas></div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="panel">
+    <h3>Service vs Incident <small>ratio</small></h3>
+    <div class="chart-wrap"><canvas id="chartServiceIncident"></canvas></div>
+  </div>
+  <div class="panel">
+    <h3>Group Distribution</h3>
+    <div class="chart-wrap"><canvas id="chartGroups"></canvas></div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="panel">
+    <h3>Priority Distribution</h3>
+    <div class="chart-wrap small"><canvas id="chartPriority"></canvas></div>
+  </div>
+  <div class="panel">
+    <h3>Daily Ticket Volume <small id="dailyVolumeMonthLabel">last 30 days</small></h3>
+    <div class="chart-wrap small"><canvas id="chartDailyVolume"></canvas></div>
+  </div>
+</div>
+
+
+<div class="grid-3">
+  
+    <div class="panel">
+      <h3>Top 10 Categories <small>by ticket count</small></h3>
+      <ul class="rank-list" id="rankCategories"></ul>
+      <div class="panel-footer">
+        <button type="button" class="see-all-link" data-dim="category">See all &#8594;</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Top 10 Technicians <small>by ticket count</small></h3>
+      <ul class="rank-list" id="rankTechnicians"></ul>
+      <div class="panel-footer">
+        <button type="button" class="see-all-link" data-dim="technician">See all &#8594;</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Top 10 Sites <small>by ticket count</small></h3>
+      <ul class="rank-list" id="rankSites"></ul>
+      <div class="panel-footer">
+        <button type="button" class="see-all-link" data-dim="site">See all &#8594;</button>
+      </div>
+    </div>
+</div>
+
+<div class="grid-3">
+  
+    <div class="panel">
+      <h3>Top 10 Departments <small>by ticket count</small></h3>
+      <ul class="rank-list" id="rankDepartments"></ul>
+      <div class="panel-footer">
+        <button type="button" class="see-all-link" data-dim="department">See all &#8594;</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Top 10 Requesters <small>by ticket count</small></h3>
+      <ul class="rank-list" id="rankRequesters"></ul>
+      <div class="panel-footer">
+        <button type="button" class="see-all-link" data-dim="requester">See all &#8594;</button>
+      </div>
+    </div>
+  <div class="panel">
+    <h3>Most Overdue <small>by technician</small></h3>
+    <ul class="rank-list" id="rankOverdue"></ul>
+    <div class="panel-footer">
+      <button type="button" class="see-all-link" data-dim="overdue_technician">See all &#8594;</button>
+    </div>
+  </div>
+</div>
+
+<div class="grid-3">
+  
+    <div class="panel">
+      <h3>Top 10 Technicians <small>fastest vs SLA — avg % of the SLA used, min 25 tickets</small></h3>
+      <ul class="rank-list" id="rankFastest"></ul>
+      <div class="panel-footer">
+        <button type="button" class="see-all-link" data-dim="technician_fastest">See all &#8594;</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Top 10 Technicians <small>highest rated</small></h3>
+      <ul class="rank-list" id="rankHighestRated"></ul>
+      <div class="panel-footer">
+        <button type="button" class="see-all-link" data-dim="technician_highest_rated">See all &#8594;</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Least Satisfied Requesters <small>lowest rated — for follow-up</small></h3>
+      <ul class="rank-list" id="rankLowestRated"></ul>
+      <div class="panel-footer">
+        <button type="button" class="see-all-link" data-dim="requester_lowest_rated">See all &#8594;</button>
+      </div>
+    </div>
+</div>
+
+<script src="assets/js/app.js"></script>
+<script src="assets/js/dashboard.js"></script>
+
+
+      </div>
+      <footer class="app-footer">Powered by ThomasLab's</footer>
+    </main>
+  </div>
+  <script>
+    (function () {
+      var btn = document.getElementById('searchToggleBtn');
+      var wrap = document.getElementById('tbSearchWrap');
+      if (btn && wrap) {
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var isOpen = wrap.style.display !== 'none';
+          wrap.style.display = isOpen ? 'none' : '';
+          if (!isOpen) {
+            var input = document.getElementById('f_search');
+            if (input) input.focus();
+          }
+        });
+
+        document.addEventListener('click', function (e) {
+          if (wrap.style.display !== 'none' && !wrap.contains(e.target) && e.target !== btn) {
+            wrap.style.display = 'none';
+          }
+        });
+      }
+
+      var userWrap = document.querySelector('.tb-user');
+      var avatar = document.querySelector('.user-avatar');
+      if (userWrap && avatar) {
+        avatar.addEventListener('click', function (e) {
+          e.stopPropagation();
+          userWrap.classList.toggle('open');
+        });
+
+        avatar.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            userWrap.classList.toggle('open');
+          }
+        });
+
+        document.addEventListener('click', function (e) {
+          if (userWrap.classList.contains('open') && !userWrap.contains(e.target)) {
+            userWrap.classList.remove('open');
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

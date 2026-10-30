@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Printer Detail - Printer Ops Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="../shared/chart.umd.js"></script>
+<script src="../shared/demo-runtime.js"></script>
+<script src="assets/js/demo-data.js"></script>
+</head>
+<body>
+  <div class="app-shell-v2">
+
+    <header class="topbar-main">
+      <a href="index.html" class="tb-brand">
+        <span class="logo-dot"></span>
+        <span class="site-title">Printer Ops Console</span>
+      </a>
+
+      <div class="tb-right">
+        <nav class="tb-nav"><a href="index.html" class="">Dashboard</a><a href="printers.html" class="active">Printers</a><a href="reports.html" class="">Reports</a><a href="alerts.html" class="">Alerts <span class="nav-badge">3</span></a></nav>
+
+        <div class="tb-user">
+          <div class="user-avatar" tabindex="0">D</div>
+          <div class="user-dropdown">
+            <strong>Demo Operator</strong>
+            <small>operator</small>
+            <a href="change_password.php" class="btn-ghost btn-sm">Change Password</a>
+            <a href="logout.php" class="btn-ghost btn-sm">Sign Out</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content-v2">
+      <div class="page-body">
+        <div class="page-head">
+          <h1>Printer Detail</h1>
+          <p>Full history, page usage, and live status for this printer</p>
+        </div>
+
+
+<div class="panel" id="printerInfoPanel">
+  <div class="empty-state">Loading…</div>
+</div>
+
+<div class="ranking-head" style="margin-top:20px;">
+  <span></span>
+  <div class="period-toggle" id="periodToggle">
+    <button data-period="day">Today</button>
+    <button data-period="week" class="active">This Week</button>
+    <button data-period="month">This Month</button>
+  </div>
+</div>
+
+<div class="kpi-grid" id="usageKpiGrid"></div>
+
+<div class="grid-2">
+  <div class="panel">
+    <h3>Page Count Trend</h3>
+    <div class="chart-wrap"><canvas id="chartPages"></canvas></div>
+  </div>
+  <div class="panel">
+    <h3>Black Toner Trend</h3>
+    <div class="chart-wrap"><canvas id="chartToner"></canvas></div>
+  </div>
+</div>
+
+<div class="table-panel">
+  <div class="table-scroll">
+    <table class="data-table" id="readingsTable">
+      <thead>
+        <tr>
+          <th>Recorded At</th>
+          <th>Toner (K/C/M/Y)</th>
+          <th>Page Count</th>
+          <th>Response (ms)</th>
+        </tr>
+      </thead>
+      <tbody id="readingsBody">
+        <tr><td colspan="4" class="empty-state">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>window.__PRINTER_ID = (parseInt(new URLSearchParams(location.search).get('id'),10)||1);</script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/printer_detail.js"></script>
+
+
+      </div>
+      <footer class="app-footer">Powered by ThomasLab's</footer>
+    </main>
+  </div>
+  <script>
+    (function () {
+      var userWrap = document.querySelector('.tb-user');
+      var avatar = document.querySelector('.user-avatar');
+      if (userWrap && avatar) {
+        avatar.addEventListener('click', function (e) {
+          e.stopPropagation();
+          userWrap.classList.toggle('open');
+        });
+        avatar.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            userWrap.classList.toggle('open');
+          }
+        });
+        document.addEventListener('click', function (e) {
+          if (userWrap.classList.contains('open') && !userWrap.contains(e.target)) {
+            userWrap.classList.remove('open');
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

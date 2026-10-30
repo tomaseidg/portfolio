@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reports - Printer Ops Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="../shared/chart.umd.js"></script>
+<script src="../shared/demo-runtime.js"></script>
+<script src="assets/js/demo-data.js"></script>
+</head>
+<body>
+  <div class="app-shell-v2">
+
+    <header class="topbar-main">
+      <a href="index.html" class="tb-brand">
+        <span class="logo-dot"></span>
+        <span class="site-title">Printer Ops Console</span>
+      </a>
+
+      <div class="tb-right">
+        <nav class="tb-nav"><a href="index.html" class="">Dashboard</a><a href="printers.html" class="">Printers</a><a href="reports.html" class="active">Reports</a><a href="alerts.html" class="">Alerts <span class="nav-badge">3</span></a></nav>
+
+        <div class="tb-user">
+          <div class="user-avatar" tabindex="0">D</div>
+          <div class="user-dropdown">
+            <strong>Demo Operator</strong>
+            <small>operator</small>
+            <a href="change_password.php" class="btn-ghost btn-sm">Change Password</a>
+            <a href="logout.php" class="btn-ghost btn-sm">Sign Out</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content-v2">
+      <div class="page-body">
+        <div class="page-head">
+          <h1>Reports</h1>
+          <p>Page usage per printer for a selected period — the number your leasing company bills you on</p>
+        </div>
+
+
+<div class="filters-bar" id="filtersBar">
+  <div class="f-group">
+    <label>Period</label>
+    <select id="r_period">
+      <option value="day">Today</option>
+      <option value="week">Last 7 Days</option>
+      <option value="month" selected>This Month</option>
+      <option value="custom">Custom Range</option>
+    </select>
+  </div>
+  <div class="f-group" id="r_from_wrap" style="display:none;">
+    <label>From</label>
+    <input type="date" id="r_from">
+  </div>
+  <div class="f-group" id="r_to_wrap" style="display:none;">
+    <label>To</label>
+    <input type="date" id="r_to">
+  </div>
+  
+    <div class="f-group">
+      <label>Site</label>
+      <div class="msel" id="ms_site" data-key="site">
+        <button type="button" class="msel-toggle">
+          <span class="msel-label">All</span>
+          <span class="chev">&#9662;</span>
+        </button>
+        <div class="msel-panel">
+          <input type="text" class="msel-search" placeholder="Search…">
+          <div class="msel-options"></div>
+          <div class="msel-actions">
+            <button type="button" class="msel-clear">Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="f-group">
+      <label>Department</label>
+      <div class="msel" id="ms_department" data-key="department">
+        <button type="button" class="msel-toggle">
+          <span class="msel-label">All</span>
+          <span class="chev">&#9662;</span>
+        </button>
+        <div class="msel-panel">
+          <input type="text" class="msel-search" placeholder="Search…">
+          <div class="msel-options"></div>
+          <div class="msel-actions">
+            <button type="button" class="msel-clear">Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="f-group">
+      <label>Company</label>
+      <div class="msel" id="ms_company" data-key="company">
+        <button type="button" class="msel-toggle">
+          <span class="msel-label">All</span>
+          <span class="chev">&#9662;</span>
+        </button>
+        <div class="msel-panel">
+          <input type="text" class="msel-search" placeholder="Search…">
+          <div class="msel-options"></div>
+          <div class="msel-actions">
+            <button type="button" class="msel-clear">Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="f-group">
+      <label>Cost Center</label>
+      <div class="msel" id="ms_cost_center" data-key="cost_center">
+        <button type="button" class="msel-toggle">
+          <span class="msel-label">All</span>
+          <span class="chev">&#9662;</span>
+        </button>
+        <div class="msel-panel">
+          <input type="text" class="msel-search" placeholder="Search…">
+          <div class="msel-options"></div>
+          <div class="msel-actions">
+            <button type="button" class="msel-clear">Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  <div class="f-group f-actions">
+    <button class="btn" id="applyReport">Generate</button>
+    <button class="btn btn-ghost" id="exportCsv">&#8681; Export CSV</button>
+  </div>
+</div>
+
+<div class="kpi-grid" id="reportKpiGrid"></div>
+
+<div class="table-panel">
+  <div class="table-scroll">
+    <table class="data-table" id="reportTable">
+      <thead>
+        <tr>
+          <th>Printer</th>
+          <th class="mono">IP Address</th>
+          <th>Serial Number</th>
+          <th>Site</th>
+          <th>Department</th>
+          <th>Company</th>
+          <th>Cost Center</th>
+          <th>Status</th>
+          <th>Pages Start</th>
+          <th>Pages End</th>
+          <th>Pages Used</th>
+          <th>Cost (USD)</th>
+        </tr>
+      </thead>
+      <tbody id="reportBody">
+        <tr><td colspan="12" class="empty-state">Choose a period and click Generate.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script src="assets/js/app.js"></script>
+<script src="assets/js/reports.js"></script>
+
+
+      </div>
+      <footer class="app-footer">Powered by ThomasLab's</footer>
+    </main>
+  </div>
+  <script>
+    (function () {
+      var userWrap = document.querySelector('.tb-user');
+      var avatar = document.querySelector('.user-avatar');
+      if (userWrap && avatar) {
+        avatar.addEventListener('click', function (e) {
+          e.stopPropagation();
+          userWrap.classList.toggle('open');
+        });
+        avatar.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            userWrap.classList.toggle('open');
+          }
+        });
+        document.addEventListener('click', function (e) {
+          if (userWrap.classList.contains('open') && !userWrap.contains(e.target)) {
+            userWrap.classList.remove('open');
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

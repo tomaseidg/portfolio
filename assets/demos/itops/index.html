@@ -1,0 +1,1714 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<title>Workstation Dashboard</title>
+<script>
+(function(){
+  try {
+    var t = localStorage.getItem('itops_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+  } catch (e) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+</script>
+<link rel="stylesheet" href="assets/vendor/tailwind/tailwind.css">
+<script src="../shared/demo-runtime.js"></script>
+<script src="assets/js/demo-data.js"></script>
+
+
+<style>
+.container{max-width:1600px;margin:0 auto;padding:28px 40px 44px}
+@media (max-width:768px){.container{padding:20px 16px 32px}}
+.toolbar-row{display:flex;justify-content:flex-end;margin-bottom:14px}
+.live-badge{display:inline-block;padding:5px 14px;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;text-transform:uppercase;user-select:none;letter-spacing:.06em;transition:.15s}
+.stats-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:12px;margin-bottom:20px}
+@media (max-width:1200px){.stats-grid{grid-template-columns:repeat(4,1fr)}}
+@media (max-width:640px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+.card{background:var(--surface);border:1px solid var(--border);padding:15px 16px;border-radius:12px;border-left:4px solid var(--accent);cursor:pointer;transition:.15s;user-select:none;box-shadow:0 1px 2px rgba(var(--shadow-color),.05)}
+.card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(var(--shadow-color),.12)}
+.card.active{border-left-width:6px;background:var(--surface-hover)}
+.card.alert{border-left-color:var(--danger)}
+.card h3{margin:0;font-size:10px;text-transform:uppercase;color:var(--fg-muted);letter-spacing:.05em;font-weight:700}
+.card p{margin:6px 0 0;font-size:22px;font-weight:800;color:var(--fg)}
+.card .sub{font-size:11px;color:var(--fg-muted);margin:2px 0 0}
+.status-counts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
+.sc-item{display:flex;align-items:center;gap:6px;padding:5px 7px;border-radius:6px;cursor:pointer;transition:.15s;font-size:14px;font-weight:700}
+.sc-item:hover{background:var(--surface-hover)}
+.sc-item.active{background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%}
+.filter-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:16px}
+.filter-row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.filter-group{display:flex;flex-direction:column;gap:5px;min-width:140px}
+.filter-group label{font-size:11px;font-weight:700;color:var(--fg-muted);text-transform:uppercase;letter-spacing:.04em}
+.filter-group select,.filter-group input[type=text]{padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;background:var(--surface-2);color:var(--fg)}
+.filter-group select:focus,.filter-group input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.btn-reset{padding:8px 16px;background:var(--surface-2);color:var(--fg);border:1px solid var(--border);border-radius:7px;font-size:13px;cursor:pointer;white-space:nowrap;font-weight:600;transition:.15s}
+.btn-reset:hover{background:var(--surface-hover);border-color:var(--border-strong)}
+.search-export-bar{display:flex;gap:10px;margin-bottom:14px;align-items:center}
+.search-box{flex:1;padding:10px 14px;font-size:14px;border:1px solid var(--border);border-radius:8px;outline:none;background:var(--surface);color:var(--fg)}
+.search-box:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.export-group{display:flex;gap:8px;position:relative}
+.btn-export{padding:9px 18px;border:1px solid transparent;border-radius:7px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;transition:.15s}
+.btn-csv{background:var(--good);color:var(--good-fg)}.btn-csv:hover{filter:brightness(1.08)}
+.btn-xlsx{background:var(--accent);color:var(--accent-fg)}.btn-xlsx:hover{background:var(--accent-hover)}
+.btn-cols{background:var(--surface);color:var(--fg);border:1px solid var(--border) !important}
+.btn-cols:hover{background:var(--surface-hover)}
+.col-picker-panel{display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--surface);border:1px solid var(--border-strong);border-radius:10px;box-shadow:0 12px 28px rgba(var(--shadow-color),.18);padding:12px 14px;z-index:20;min-width:220px}
+.col-picker-panel.open{display:block}
+.col-picker-panel .cp-title{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--fg-muted);font-weight:700;margin-bottom:8px}
+.col-picker-panel label{display:flex;align-items:center;gap:8px;font-size:13px;padding:4px 0;cursor:pointer;white-space:nowrap;color:var(--fg)}
+.col-picker-panel .cp-actions{display:flex;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.col-picker-panel .cp-actions button{flex:1;padding:6px 8px;font-size:12px;border:1px solid var(--border);background:var(--surface-2);color:var(--fg);border-radius:5px;cursor:pointer}
+.col-picker-panel .cp-actions button:hover{background:var(--surface-hover)}
+.result-count{font-size:13px;color:var(--fg-muted);margin-bottom:8px}
+.result-count b{color:var(--fg)}
+.table-wrap{overflow-x:auto;min-height:400px;background:var(--surface);border:1px solid var(--border);border-radius:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:10px 13px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+th{background:var(--surface-2);color:var(--fg-muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em;position:sticky;top:0;z-index:1;font-weight:700}
+th.sortable{cursor:pointer;user-select:none}
+th.sortable:hover{background:var(--surface-hover)}
+th .sort-icon{margin-left:4px;opacity:.5;font-style:normal}
+th.asc .sort-icon::after{content:"▲"}
+th.desc .sort-icon::after{content:"▼"}
+th:not(.asc):not(.desc) .sort-icon::after{content:"⇅"}
+tr:hover td{background:var(--surface-hover)}
+.dev-link{color:var(--accent);text-decoration:none;font-weight:600}
+.dev-link:hover{text-decoration:underline}
+code{background:var(--surface-2);color:var(--fg);padding:2px 5px;border-radius:4px;font-size:12px}
+.pagination{display:flex;justify-content:center;align-items:center;gap:15px;margin-top:20px;font-size:13px;font-weight:600}
+.pagination button{padding:8px 16px;background:var(--accent);color:var(--accent-fg);border:none;border-radius:7px;cursor:pointer;font-weight:bold;transition:.15s}
+.pagination button:disabled{background:var(--surface-2);color:var(--fg-muted);cursor:not-allowed}
+.pagination select{padding:6px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--fg);font-size:13px;outline:none}
+</style>
+<script>
+let allRows = [], filteredRows = [], sortCol = -1, sortDir = 1;
+let cardFilter = '', currentPage = 1, rowsPerPage = 50, searchTimeout = null;
+
+window.addEventListener('DOMContentLoaded', () => {
+    const tbody = document.getElementById('deviceTable');
+    allRows = Array.from(tbody.querySelectorAll('tr'));
+    tbody.innerHTML = ''; 
+    const sy = sessionStorage.getItem('scrollY'), sv = sessionStorage.getItem('search');
+    if (sv) { document.getElementById('searchBar').value = sv; }
+    applyAllFilters();
+    if (sy) window.scrollTo(0, parseInt(sy));
+});
+
+function setCardFilter(f) {
+    if (cardFilter === f) cardFilter = ''; else cardFilter = f;
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.sc-item').forEach(c => c.classList.remove('active'));
+    if (cardFilter !== '') {
+        const c = document.getElementById('card-' + cardFilter);
+        if (c) c.classList.add('active');
+        if (cardFilter === 'all') {
+            document.getElementById('btn-st-all')?.classList.add('active');
+            document.getElementById('card-status')?.classList.add('active');
+        } else if (cardFilter.startsWith('status-')) {
+            document.getElementById('btn-st-' + cardFilter.replace('status-',''))?.classList.add('active');
+            document.getElementById('card-status')?.classList.add('active');
+        }
+    }
+    // NOTE: the "AD Status" dropdown was removed - every device
+    // (current AND historical) is now always in scope, and the
+    // HISTORICAL badge on the row is what marks the difference. That
+    // also means the Removed card no longer needs to flip any filter
+    // before its rows can appear.
+    applyAllFilters();
+}
+
+function resetFilters() {
+    cardFilter = '';
+    document.querySelectorAll('.card, .sc-item').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('#searchBar, #filterCompany, #filterType, #filterBrand, #filterSite, #filterModel, #filterOS, #filterWinVer, #filterRAM').forEach(el => el.value = '');
+    document.getElementById('filterInactive').value = '0';
+    applyAllFilters();
+}
+
+function debounceSearch() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(applyAllFilters, 300);
+}
+
+function applyAllFilters() {
+    const search = document.getElementById('searchBar').value.toUpperCase().trim();
+    const terms = search ? search.split(',').map(s => s.trim()).filter(Boolean) : [];
+    const fCompany = document.getElementById('filterCompany').value, fType = document.getElementById('filterType').value, fBrand = document.getElementById('filterBrand').value;
+    const fSite = document.getElementById('filterSite').value, fModel = document.getElementById('filterModel').value, fOS = document.getElementById('filterOS').value, fWinVer = document.getElementById('filterWinVer').value, fRAM = document.getElementById('filterRAM').value, inactiveDays = parseInt(document.getElementById('filterInactive').value) || 0;
+    
+    filteredRows = [];
+    allRows.forEach(row => {
+        const status = row.dataset.status || '', ram = parseFloat(row.dataset.ram || '0');
+        const hasHdd = row.dataset.hdd === 'true', isLeg = row.dataset.legacy === 'true', hasData = row.dataset.hasdata === 'true', isCFull = row.dataset.cfull === 'true';
+        const rCompany = row.dataset.company || '', rType = row.dataset.devtype || '', rBrand = row.dataset.brand || '';
+        const llDays = parseInt(row.dataset.lldays || '-1'), rSite = (row.dataset.site || '').toLowerCase(), rModel = (row.dataset.model || '').toLowerCase(), rOS = (row.dataset.os || '').toLowerCase(), rWinVer = (row.dataset.winver || '').toLowerCase();
+
+        let cardOk = true;
+        if (cardFilter === 'all' && status.match(/REMOVED|In_Stock|Maintenance|Scrapped/)) cardOk = false;
+        if (cardFilter === 'status-online' && status !== 'Online') cardOk = false;
+        if (cardFilter === 'status-offline' && (status === 'Online' || status.match(/REMOVED|In_Stock|Maintenance|Scrapped/))) cardOk = false;
+        if (cardFilter === 'status-removed' && !status.match(/REMOVED|In_Stock|Maintenance|Scrapped/)) cardOk = false;
+        if (cardFilter === 'scanned' && !hasData) cardOk = false;
+        if (cardFilter === 'low-ram' && (isNaN(ram) || ram === 0 || ram >= 8)) cardOk = false;
+        if (cardFilter === 'hdd' && !hasHdd) cardOk = false;
+        if (cardFilter === 'legacy' && !isLeg) cardOk = false;
+        if (cardFilter === 'c-full' && !isCFull) cardOk = false;
+
+        let inactOk = inactiveDays > 0 ? (llDays >= inactiveDays) : true;
+        let dropOk = true;
+        if (fSite && rSite.indexOf(fSite.toLowerCase()) < 0) dropOk = false;
+        if (fModel && rModel.indexOf(fModel.toLowerCase()) < 0) dropOk = false;
+        if (fOS && rOS.indexOf(fOS.toLowerCase()) < 0) dropOk = false;
+        if (fWinVer && rWinVer.indexOf(fWinVer.toLowerCase()) < 0) dropOk = false;
+        if (fRAM) {
+            if (fRAM === 'lt8' && !(ram > 0 && ram < 8)) dropOk = false;
+            if (fRAM === 'lt16' && !(ram >= 8 && ram < 16)) dropOk = false;
+            if (fRAM === 'ge16' && !(ram >= 16)) dropOk = false;
+        }
+        // Company / Type / Brand are exact matches (the dropdown values
+        // come from the same helper that wrote the data-* attributes),
+        // unlike the free-text Site/Model/OS filters above.
+        if (fCompany && rCompany !== fCompany) dropOk = false;
+        if (fType && rType !== fType) dropOk = false;
+        if (fBrand && rBrand !== fBrand) dropOk = false;
+
+        let textOk = terms.length > 0 ? terms.some(t => row.textContent.toUpperCase().includes(t)) : true;
+        if (cardOk && inactOk && dropOk && textOk) filteredRows.push(row);
+    });
+
+    currentPage = 1; updateCardCounts(); renderTable();
+}
+
+function renderTable() {
+    const tbody = document.getElementById('deviceTable');
+    tbody.innerHTML = '';
+    document.getElementById('resultCount').textContent = filteredRows.length;
+    const start = (currentPage - 1) * rowsPerPage, pageRows = filteredRows.slice(start, start + rowsPerPage);
+    const frag = document.createDocumentFragment();
+    pageRows.forEach(r => frag.appendChild(r));
+    tbody.appendChild(frag);
+    renderPagination();
+}
+
+function renderPagination() {
+    const totalPages = Math.ceil(filteredRows.length / rowsPerPage) || 1;
+    let html = '<button onclick="changePage(-1)" ' + (currentPage === 1 ? 'disabled' : '') + '>Previous</button>';
+    html += '<span>Page ' + currentPage + ' of ' + totalPages + '</span>';
+    html += '<button onclick="changePage(1)" ' + (currentPage === totalPages ? 'disabled' : '') + '>Next</button>';
+    html += '<select onchange="changeRowsPerPage(this.value)">';
+    html += '<option value="50" ' + (rowsPerPage === 50 ? 'selected' : '') + '>50 per page</option>';
+    html += '<option value="100" ' + (rowsPerPage === 100 ? 'selected' : '') + '>100 per page</option>';
+    html += '<option value="500" ' + (rowsPerPage === 500 ? 'selected' : '') + '>500 per page</option>';
+    html += '</select>';
+    document.getElementById('paginationControls').innerHTML = html;
+}
+
+function changePage(dir) { currentPage += dir; renderTable(); window.scrollTo(0, 0); }
+function changeRowsPerPage(val) { rowsPerPage = parseInt(val); currentPage = 1; renderTable(); }
+
+function updateCardCounts() {
+    let online=0, offline=0, removed=0, lowRam=0, hdd=0, legacy=0, cFull=0, scannedCount=0;
+    // Online/Offline/Removed intentionally use allRows (not filteredRows):
+    // these are absolute totals, same as the other summary cards below.
+    // Using filteredRows here made "Removed" show 0 by default, since the
+    // "Active in AD only" filter (on by default) hides removed/historical
+    // devices from filteredRows before this even runs.
+    allRows.forEach(row => {
+        const status = row.dataset.status || '';
+        if (status === 'Online') online++; 
+        else if (status.match(/REMOVED|In_Stock|Maintenance|Scrapped/)) removed++; 
+        else offline++; 
+
+        const ram = parseFloat(row.dataset.ram || '0');
+        if (row.dataset.hasdata === 'true') scannedCount++;
+        if (!isNaN(ram) && ram > 0 && ram < 8) lowRam++;
+        if (row.dataset.hdd === 'true') hdd++;
+        if (row.dataset.legacy === 'true') legacy++;
+        if (row.dataset.cfull === 'true') cFull++;
+    });
+    const safeSetText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+    safeSetText('cnt-st-online', online); safeSetText('cnt-st-offline', offline); safeSetText('cnt-st-removed', removed);
+    safeSetText('cnt-scanned', scannedCount + ' / ' + allRows.length); safeSetText('cnt-ram', lowRam);
+    safeSetText('cnt-hdd', hdd); safeSetText('cnt-legacy', legacy); safeSetText('cnt-cfull', cFull);
+}
+
+function sortTable(col) {
+    if (sortCol === col) { sortDir *= -1; } else { sortCol = col; sortDir = 1; }
+    applySort();
+}
+
+// Applies the CURRENT sortCol/sortDir without toggling anything - used
+// both by sortTable() (user clicks a header) and by the AJAX Live
+// refresh (re-applying whatever sort was already active to fresh data).
+function applySort() {
+    if (sortCol === -1) return;
+    document.querySelectorAll('th.sortable').forEach((th, i) => {
+        th.classList.remove('asc','desc');
+        if (i === sortCol) th.classList.add(sortDir === 1 ? 'asc' : 'desc');
+    });
+    filteredRows.sort((a, b) => {
+        const av = a.cells[sortCol]?.textContent.trim() || '', bv = b.cells[sortCol]?.textContent.trim() || '';
+        const an = parseFloat(av), bn = parseFloat(bv);
+        if (!isNaN(an) && !isNaN(bn)) return (an - bn) * sortDir;
+        return av.localeCompare(bv, undefined, {sensitivity:'base'}) * sortDir;
+    });
+    currentPage = 1; renderTable();
+}
+
+// ---------------------------------------------------------
+// Export (CSV / Excel) with selectable columns
+// ---------------------------------------------------------
+const COLUMN_DEFS = [
+    { key: 'name',      label: 'Computer Name',  idx: 0 },
+    { key: 'desc',      label: 'Description',    idx: 1 },
+    { key: 'model',     label: 'Model',          idx: 2 },
+    { key: 'site',      label: 'Site',           idx: 3 },
+    { key: 'serial',    label: 'Serial Number',  idx: 4 },
+    { key: 'matcode',   label: 'Material Code',  idx: 5 },
+    { key: 'cpu',       label: 'CPU',            idx: 6 },
+    { key: 'storage',   label: 'Storage Type',   idx: 7 },
+    { key: 'ram',       label: 'RAM',            idx: 8 },
+    { key: 'lastlogon', label: 'Last Logon',     idx: 9 },
+    { key: 'scantime',  label: 'Scan Time',      idx: 10 },
+];
+
+document.addEventListener('click', (e) => {
+    const panel = document.getElementById('colPickerPanel');
+    if (!panel || !panel.classList.contains('open')) return;
+    if (e.target.closest('.export-group')) return;
+    panel.classList.remove('open');
+});
+
+function toggleColPicker() {
+    document.getElementById('colPickerPanel').classList.toggle('open');
+}
+
+function setAllCols(state) {
+    document.querySelectorAll('.col-chk').forEach(chk => chk.checked = state);
+}
+
+function getSelectedColumns() {
+    const checked = new Set(Array.from(document.querySelectorAll('.col-chk:checked')).map(c => c.value));
+    return COLUMN_DEFS.filter(c => checked.has(c.key));
+}
+
+function getVisibleData() {
+    const cols = getSelectedColumns();
+    const headers = cols.map(c => c.label);
+    const rows = filteredRows.map(row => cols.map(c => (row.cells[c.idx]?.innerText || '').trim()));
+    return { headers, rows };
+}
+
+function exportCSV() {
+    const { headers, rows } = getVisibleData();
+    if (headers.length === 0) { alert('Please select at least one column.'); return; }
+    const escape = v => '"' + v.replace(/"/g, '""') + '"';
+    const lines  = [headers.map(escape).join(','), ...rows.map(r => r.map(escape).join(','))];
+    const blob   = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Device_Inventory.csv'; a.click();
+}
+
+function exportXLSX() {
+    const { headers, rows } = getVisibleData();
+    if (headers.length === 0) { alert('Please select at least one column.'); return; }
+    if (typeof XLSX === 'undefined') {
+        alert('The Excel export library failed to load. Check that assets/vendor/xlsx-js-style/xlsx.bundle.js exists on the server, or use CSV instead.');
+        return;
+    }
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    // Reasonable auto column widths so the file doesn't open with
+    // every column crushed to its header text.
+    ws['!cols'] = headers.map((h, i) => {
+        let max = h.length;
+        for (const r of rows) { const len = (r[i] ?? '').length; if (len > max) max = len; }
+        return { wch: Math.min(Math.max(max + 2, 10), 60) };
+    });
+    // Header row styling (dark navy fill, white bold text) - matches
+    // the look of the old export. xlsx-js-style only, plain SheetJS
+    // Community Edition silently ignores the .s property on write.
+    const headerStyle = {
+        fill: { fgColor: { rgb: '2C3E50' } },
+        font: { color: { rgb: 'FFFFFF' }, bold: true },
+        alignment: { horizontal: 'center', vertical: 'center' }
+    };
+    for (let c = 0; c < headers.length; c++) {
+        const addr = XLSX.utils.encode_cell({ r: 0, c });
+        if (ws[addr]) ws[addr].s = headerStyle;
+    }
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Inventory');
+    XLSX.writeFile(wb, 'Device_Inventory.xlsx');
+}
+
+let isLive = true;
+let liveTimer = setInterval(() => { if (isLive) refreshDashboardData(); }, 30000);
+
+function toggleRefresh() {
+    isLive = !isLive;
+    const btn = document.getElementById('liveBtn');
+    btn.textContent = isLive ? 'LIVE' : 'PAUSED';
+    btn.classList.toggle('badge-good', isLive);
+    btn.classList.toggle('badge-danger', !isLive);
+}
+
+// Fetches fresh device data + stat counts and patches the page in
+// place - no navigation, so scroll position, search text, dropdown
+// filters, and sort order are all left exactly as the user had them
+// (same pattern as the Scan Dashboard's polling). The visible page
+// number resets to 1, same as it already does after any search/filter
+// change today.
+let isRefreshing = false;
+function refreshDashboardData() {
+    if (isRefreshing) return;
+    isRefreshing = true;
+    const btn = document.getElementById('liveBtn');
+    const prevText = btn.textContent;
+    btn.textContent = 'SYNCING…';
+
+    fetch('index_refresh.php', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(r => { if (!r.ok) throw new Error('Refresh request failed: ' + r.status); return r.json(); })
+        .then(data => {
+            const tbody = document.getElementById('deviceTable');
+            tbody.innerHTML = data.tableHtml;
+            allRows = Array.from(tbody.querySelectorAll('tr'));
+
+            const s = data.stats;
+            const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+            setText('cnt-active', s.active);
+            setText('cnt-st-online', s.online);
+            setText('cnt-st-offline', s.offline);
+            setText('cnt-st-removed', s.removed);
+            setText('cnt-scanned', s.scanned + ' / ' + s.total);
+            setText('cnt-ram', s.lowRam);
+            setText('cnt-hdd', s.hdd);
+            setText('cnt-legacy', s.legacy);
+            setText('cnt-cfull', s.cFull);
+            setText('totalDeviceCount', s.total);
+
+            // Re-apply whatever filters/search/sort/page the user currently
+            // has active, now against the freshly-fetched data.
+            applyAllFilters();
+            applySort();
+        })
+        .catch(err => console.error('Live refresh failed:', err))
+        .finally(() => {
+            isRefreshing = false;
+            if (isLive) btn.textContent = prevText;
+        });
+}
+
+window.addEventListener('beforeunload', () => {
+    sessionStorage.setItem('scrollY', window.scrollY);
+    sessionStorage.setItem('search',  document.getElementById('searchBar').value);
+});
+</script>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html" class="brand" title="Go to the home page">
+    <span class="brand-name">IT <b>Operations</b></span>
+    <span class="brand-sub">Device Intelligence Dashboard</span>
+  </a>
+  <nav class="nav"><a href="index.html" class="active">Workstation Dashboard</a><a href="users_report.php" class="">Users Dashboard</a><a href="assets_report.php" class="">Assets Dashboard</a><a href="alerts_report.php" class="">Alerts Dashboard<span class="nav-badge">19</span></a><a href="scan_dashboard.html" class="">Scan Dashboard</a></nav>
+  <div class="flex items-center gap-3">
+    <button type="button" class="theme-toggle" onclick="appToggleTheme()" title="Toggle light/dark theme" aria-label="Toggle light/dark theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+    </button>
+    <div class="relative has-tooltip">
+      <button class="theme-toggle" style="border-radius:50%;padding:0" onclick="document.getElementById('ghDropdown').classList.toggle('open')">
+        <span class="avatar">D</span>
+      </button>
+      <div class="tooltip">Demo Operator &middot; @demo.operator</div>
+      <div class="dropdown" id="ghDropdown">
+        <div class="dd-head"><b>Demo Operator</b>@demo.operator</div>
+        <a href="change_password.php">Change Password</a>
+        <a href="logout.php" class="dd-danger">Logout</a>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="assets/js/theme-toggle.js"></script>
+<script>
+document.addEventListener('click', function(e){
+    const dd = document.getElementById('ghDropdown');
+    const btn = document.querySelector('.avatar').closest('button');
+    if (dd && dd.classList.contains('open') && !dd.contains(e.target) && !btn.contains(e.target)) {
+        dd.classList.remove('open');
+    }
+});
+</script>
+<div class="container">
+
+  <div class="toolbar-row">
+    <span id="liveBtn" class="live-badge badge-good" onclick="toggleRefresh()">LIVE</span>
+  </div>
+
+  <div class="stats-grid">
+    <div class="card" id="card-status" style="cursor:default; padding:12px 16px; grid-column: span 2;">
+      <h3>Scan Status</h3>
+      <div class="status-counts">
+         <div class="sc-item" id="btn-st-all" onclick="setCardFilter('all')" title="Active in AD">
+            <span class="dot" style="background:var(--fg-subtle)"></span> <b id="cnt-active" style="color:var(--fg)">61</b> ACTIVE
+         </div>
+         <div class="sc-item" id="btn-st-online" onclick="setCardFilter('status-online')" title="Online">
+            <span class="dot" style="background:var(--good)"></span> <b id="cnt-st-online" style="color:var(--fg)">53</b> Online
+         </div>
+         <div class="sc-item" id="btn-st-offline" onclick="setCardFilter('status-offline')" title="Offline & Errors">
+            <span class="dot" style="background:var(--warn)"></span> <b id="cnt-st-offline" style="color:var(--fg)">8</b> Offline
+         </div>
+         <div class="sc-item" id="btn-st-removed" onclick="setCardFilter('status-removed')" title="Removed">
+            <span class="dot" style="background:var(--danger)"></span> <b id="cnt-st-removed" style="color:var(--fg)">3</b> Removed
+         </div>
+      </div>
+    </div>
+    <div class="card" id="card-scanned" onclick="setCardFilter('scanned')">
+      <h3>Scanned Devices</h3>
+      <p id="cnt-scanned">62 / 64</p>
+      <div class="sub">click to filter</div>
+    </div>
+    <div class="card alert" id="card-low-ram" onclick="setCardFilter('low-ram')">
+      <h3>RAM &lt; 8 GB</h3>
+      <p id="cnt-ram">11</p>
+    </div>
+    <div class="card alert" id="card-hdd" onclick="setCardFilter('hdd')">
+      <h3>HDD Devices</h3>
+      <p id="cnt-hdd">14</p>
+    </div>
+    <div class="card alert" id="card-legacy" onclick="setCardFilter('legacy')">
+      <h3>Legacy CPU &lt; Gen 8</h3>
+      <p id="cnt-legacy">14</p>
+    </div>
+    <div class="card alert" id="card-c-full" onclick="setCardFilter('c-full')">
+      <h3>C: Drive &ge; 90%</h3>
+      <p id="cnt-cfull">6</p>
+      <div class="sub">click to filter</div>
+  </div>
+  </div>
+
+  <div class="filter-panel">
+    <div class="filter-row">
+      
+      <div class="filter-group">
+        <label>Company</label>
+        <select id="filterCompany" onchange="applyAllFilters()">
+          <option value="">All Companies</option>
+          <option value="Company A">Company A</option><option value="Company B">Company B</option><option value="Company C">Company C</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Type</label>
+        <select id="filterType" onchange="applyAllFilters()">
+          <option value="">All Types</option>
+          <option value="Desktop">Desktop</option><option value="Laptop">Laptop</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Brand</label>
+        <select id="filterBrand" onchange="applyAllFilters()">
+          <option value="">All Brands</option>
+          <option value="Dell">Dell</option><option value="HP">HP</option><option value="Lenovo">Lenovo</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Site</label>
+        <select id="filterSite" onchange="applyAllFilters()">
+          <option value="">All Sites</option>
+          <option value="East Branch / Main">East Branch / Main</option><option value="Head Office / Annex">Head Office / Annex</option><option value="Head Office / Main Building">Head Office / Main Building</option><option value="North Campus / Building A">North Campus / Building A</option><option value="North Campus / Building B">North Campus / Building B</option><option value="West Branch / Main">West Branch / Main</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Model</label>
+        <select id="filterModel" onchange="applyAllFilters()">
+          <option value="">All Models</option>
+          <option value="Dell Latitude 5420">Dell Latitude 5420</option><option value="Dell Latitude 5440">Dell Latitude 5440</option><option value="Dell OptiPlex 3050">Dell OptiPlex 3050</option><option value="Dell OptiPlex 7010">Dell OptiPlex 7010</option><option value="HP EliteBook 840 G10">HP EliteBook 840 G10</option><option value="HP ProDesk 400 G7">HP ProDesk 400 G7</option><option value="HP ProDesk 600 G1">HP ProDesk 600 G1</option><option value="Lenovo ThinkCentre M70q">Lenovo ThinkCentre M70q</option><option value="Lenovo ThinkPad T14 Gen 4">Lenovo ThinkPad T14 Gen 4</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>OS</label>
+        <select id="filterOS" onchange="applyAllFilters()">
+          <option value="">All OS</option>
+          <option value="Windows 10 Pro">Windows 10 Pro</option><option value="Windows 11 Pro">Windows 11 Pro</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="filterWinVer">Win Version</label>
+        <select id="filterWinVer" onchange="applyAllFilters()">
+            <option value="">All Versions</option>
+            <option value="22H2">22H2</option><option value="23H2">23H2</option><option value="24H2">24H2</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>RAM Range</label>
+        <select id="filterRAM" onchange="applyAllFilters()">
+          <option value="">Any</option>
+          <option value="lt8">&lt; 8 GB</option>
+          <option value="lt16">8 – 15 GB</option>
+          <option value="ge16">≥ 16 GB</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Last logon inactive &gt;</label>
+        <select id="filterInactive" onchange="applyAllFilters()">
+          <option value="0">Any</option>
+          <option value="30">30 days</option>
+          <option value="60">60 days</option>
+          <option value="90">90 days</option>
+          <option value="180">6 months</option>
+          <option value="365">1 year</option>
+        </select>
+      </div>
+      <div class="filter-group" style="justify-content:flex-end">
+        <label>&nbsp;</label>
+        <button class="btn-reset" onclick="resetFilters()">Reset All</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="search-export-bar">
+    <input type="text" id="searchBar" oninput="debounceSearch()" class="search-box"
+           placeholder="Search by name, serial, material code, description... (comma-separate multiple terms)">
+    <div class="export-group">
+      <button type="button" class="btn-export btn-cols" onclick="toggleColPicker()">Columns ▾</button>
+      <button class="btn-export btn-csv"  onclick="exportCSV()">⬇ CSV</button>
+      <button class="btn-export btn-xlsx" onclick="exportXLSX()">⬇ Excel</button>
+      <div id="colPickerPanel" class="col-picker-panel">
+        <div class="cp-title">Columns to export</div>
+        <label><input type="checkbox" class="col-chk" value="name" checked> Computer Name</label>
+        <label><input type="checkbox" class="col-chk" value="desc" checked> Description</label>
+        <label><input type="checkbox" class="col-chk" value="model" checked> Model</label>
+        <label><input type="checkbox" class="col-chk" value="site" checked> Site</label>
+        <label><input type="checkbox" class="col-chk" value="serial" checked> Serial Number</label>
+        <label><input type="checkbox" class="col-chk" value="matcode" checked> Material Code</label>
+        <label><input type="checkbox" class="col-chk" value="cpu" checked> CPU</label>
+        <label><input type="checkbox" class="col-chk" value="storage" checked> Storage Type</label>
+        <label><input type="checkbox" class="col-chk" value="ram" checked> RAM</label>
+        <label><input type="checkbox" class="col-chk" value="lastlogon" checked> Last Logon</label>
+        <label><input type="checkbox" class="col-chk" value="scantime" checked> Scan Time</label>
+        <div class="cp-actions">
+          <button type="button" onclick="setAllCols(true)">Select All</button>
+          <button type="button" onclick="setAllCols(false)">Clear All</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-count">Showing <b id="resultCount">0</b> of <b id="totalDeviceCount">64</b> recorded devices</div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="sortable" onclick="sortTable(0)">Computer Name<i class="sort-icon"></i></th>
+          <th class="sortable" onclick="sortTable(1)">Description<i class="sort-icon"></i></th>
+          <th class="sortable" onclick="sortTable(2)">Model<i class="sort-icon"></i></th>
+          <th class="sortable" onclick="sortTable(3)">Site<i class="sort-icon"></i></th>
+          <th>Serial</th>
+          <th class="sortable" onclick="sortTable(5)">Material Code<i class="sort-icon"></i></th>
+          <th class="sortable" onclick="sortTable(6)">CPU<i class="sort-icon"></i></th>
+          <th>Storage</th>
+          <th class="sortable" onclick="sortTable(8)">RAM<i class="sort-icon"></i></th>
+          <th class="sortable" onclick="sortTable(9)" title="Real-time value from AD's non-replicated lastLogon attribute, checked across every Domain Controller (not delayed by AD replication like lastLogonTimestamp).">Last Logon<i class="sort-icon"></i></th>
+          <th class="sortable" onclick="sortTable(10)">Scanned<i class="sort-icon"></i></th>
+        </tr>
+      </thead>
+      <tbody id="deviceTable">
+                <tr data-status="Online" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="1" data-site="Head Office / Main Building" data-model="Dell Latitude 5440" data-os="Windows 11 Pro" data-winver="23H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company A" data-devtype="Laptop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=DE23B10&computer=HO-LT-0100"><b>HO-LT-0100</b></a>
+            
+          </td>
+          <td>Finance - Accountant</td>
+          <td>Dell Latitude 5440</td>
+          <td class="text-info font-semibold">Head Office / Main Building</td>
+          <td><code>DE23B10</code></td>
+          <td>LAPTP-DEL-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i5-1345U</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="">2026-10-28 07:00:00</td>
+          <td>2026-10-29 06:07:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="8" data-hdd="false" data-legacy="false" data-lldays="5" data-site="Head Office / Annex" data-model="HP ProDesk 400 G7" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company A" data-devtype="Desktop" data-brand="HP">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=HP252A1&computer=HO-PC-0107"><b>HO-PC-0107</b></a>
+            
+          </td>
+          <td>HR Officer</td>
+          <td>HP ProDesk 400 G7</td>
+          <td class="text-info font-semibold">Head Office / Annex</td>
+          <td><code>HP252A1</code></td>
+          <td>DSKTP-HP-08</td>
+          <td class="">Intel(R) Core(TM) i5-10500 CPU @ 3.10GHz</td>
+          <td class="">SSD</td>
+          <td class="">8 GB</td>
+          <td class="">2026-10-24 02:00:00</td>
+          <td>2026-10-29 08:26:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="8" data-hdd="false" data-legacy="false" data-lldays="0" data-site="North Campus / Building A" data-model="Dell Latitude 5420" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company B" data-devtype="Laptop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=DE26A32&computer=NC-LT-0114"><b>NC-LT-0114</b></a>
+            
+          </td>
+          <td>Reception</td>
+          <td>Dell Latitude 5420</td>
+          <td class="text-info font-semibold">North Campus / Building A</td>
+          <td><code>DE26A32</code></td>
+          <td>LAPTP-DEL-08</td>
+          <td class="">11th Gen Intel(R) Core(TM) i5-1145G7</td>
+          <td class="">SSD</td>
+          <td class="">8 GB</td>
+          <td class="">2026-10-29 07:00:00</td>
+          <td>2026-10-29 05:57:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="4" data-hdd="true" data-legacy="true" data-lldays="0" data-site="North Campus / Building B" data-model="Dell OptiPlex 3050" data-os="Windows 10 Pro" data-winver="22H2" data-cfull="true" data-hasdata="true" data-active="true" data-company="Company B" data-devtype="Desktop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=DE281C3&computer=NC-PC-0121"><b>NC-PC-0121</b></a>
+            
+          </td>
+          <td>Procurement</td>
+          <td>Dell OptiPlex 3050</td>
+          <td class="text-info font-semibold">North Campus / Building B</td>
+          <td><code>DE281C3</code></td>
+          <td>DSKTP-DEL-04</td>
+          <td class="text-danger font-bold">Intel(R) Core(TM) i5-7500 CPU @ 3.40GHz</td>
+          <td class="text-danger font-bold">HDD</td>
+          <td class="text-danger font-bold">4 GB</td>
+          <td class="">2026-10-29 02:00:00</td>
+          <td>2026-10-29 06:32:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="47" data-site="East Branch / Main" data-model="HP EliteBook 840 G10" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company C" data-devtype="Laptop" data-brand="HP">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=HP29954&computer=BR-LT-0128"><b>BR-LT-0128</b></a>
+            
+          </td>
+          <td>IT Service Desk</td>
+          <td>HP EliteBook 840 G10</td>
+          <td class="text-info font-semibold">East Branch / Main</td>
+          <td><code>HP29954</code></td>
+          <td>LAPTP-HP-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i7-1365U</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="text-danger font-bold">2026-09-12 04:00:00</td>
+          <td>2026-10-29 06:10:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="4" data-hdd="true" data-legacy="true" data-lldays="8" data-site="West Branch / Main" data-model="HP ProDesk 600 G1" data-os="Windows 10 Pro" data-winver="22H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company C" data-devtype="Desktop" data-brand="HP">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=HP2B0E5&computer=BR-PC-0135"><b>BR-PC-0135</b></a>
+            
+          </td>
+          <td>Customer Service</td>
+          <td>HP ProDesk 600 G1</td>
+          <td class="text-info font-semibold">West Branch / Main</td>
+          <td><code>HP2B0E5</code></td>
+          <td>DSKTP-HP-04</td>
+          <td class="text-danger font-bold">Intel(R) Core(TM) i3-4160 CPU @ 3.60GHz</td>
+          <td class="text-danger font-bold">HDD</td>
+          <td class="text-danger font-bold">4 GB</td>
+          <td class="">2026-10-21 10:00:00</td>
+          <td>2026-10-29 07:12:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="0" data-site="Head Office / Main Building" data-model="Lenovo ThinkPad T14 Gen 4" data-os="Windows 11 Pro" data-winver="23H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company A" data-devtype="Laptop" data-brand="Lenovo">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=LE2C876&computer=HO-LT-0142"><b>HO-LT-0142</b></a>
+            
+          </td>
+          <td>Operations Analyst</td>
+          <td>Lenovo ThinkPad T14 Gen 4</td>
+          <td class="text-info font-semibold">Head Office / Main Building</td>
+          <td><code>LE2C876</code></td>
+          <td>LAPTP-LEN-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i7-1355U</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="">2026-10-29 07:00:00</td>
+          <td>2026-10-29 04:11:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="8" data-hdd="false" data-legacy="false" data-lldays="1" data-site="Head Office / Annex" data-model="Lenovo ThinkCentre M70q" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company A" data-devtype="Desktop" data-brand="Lenovo">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=LE2E007&computer=HO-PC-0149"><b>HO-PC-0149</b></a>
+            
+          </td>
+          <td>Sales Desk</td>
+          <td>Lenovo ThinkCentre M70q</td>
+          <td class="text-info font-semibold">Head Office / Annex</td>
+          <td><code>LE2E007</code></td>
+          <td>DSKTP-LEN-08</td>
+          <td class="">12th Gen Intel(R) Core(TM) i5-12400T</td>
+          <td class="">SSD</td>
+          <td class="">8 GB</td>
+          <td class="">2026-10-28 05:00:00</td>
+          <td>2026-10-29 05:25:00</td>
+        </tr>
+        <tr data-status="Offline" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="3" data-site="North Campus / Building A" data-model="Dell OptiPlex 7010" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company B" data-devtype="Desktop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--warn);margin-right:6px;" title="Offline"></span>
+            <a class="dev-link" href="report.php?serial=DE2F798&computer=NC-PC-0156"><b>NC-PC-0156</b></a>
+            
+          </td>
+          <td>Logistics</td>
+          <td>Dell OptiPlex 7010</td>
+          <td class="text-info font-semibold">North Campus / Building A</td>
+          <td><code>DE2F798</code></td>
+          <td>DSKTP-DEL-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i5-13500</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="">2026-10-26 09:00:00</td>
+          <td>2026-10-26 05:20:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="5" data-site="North Campus / Building B" data-model="Dell Latitude 5440" data-os="Windows 11 Pro" data-winver="23H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company B" data-devtype="Laptop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=DE30F20&computer=NC-LT-0163"><b>NC-LT-0163</b></a>
+            
+          </td>
+          <td>Marketing</td>
+          <td>Dell Latitude 5440</td>
+          <td class="text-info font-semibold">North Campus / Building B</td>
+          <td><code>DE30F20</code></td>
+          <td>LAPTP-DEL-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i5-1345U</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="">2026-10-24 01:00:00</td>
+          <td>2026-10-29 03:45:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="8" data-hdd="false" data-legacy="false" data-lldays="0" data-site="East Branch / Main" data-model="HP ProDesk 400 G7" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company C" data-devtype="Desktop" data-brand="HP">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=HP326B1&computer=BR-PC-0170"><b>BR-PC-0170</b></a>
+            
+          </td>
+          <td>Facilities</td>
+          <td>HP ProDesk 400 G7</td>
+          <td class="text-info font-semibold">East Branch / Main</td>
+          <td><code>HP326B1</code></td>
+          <td>DSKTP-HP-08</td>
+          <td class="">Intel(R) Core(TM) i5-10500 CPU @ 3.10GHz</td>
+          <td class="">SSD</td>
+          <td class="">8 GB</td>
+          <td class="">2026-10-29 07:00:00</td>
+          <td>2026-10-29 04:59:00</td>
+        </tr>
+        <tr data-status="REMOVED" data-ram="0" data-hdd="false" data-legacy="false" data-lldays="167" data-site="West Branch / Main" data-model="Dell Latitude 5420" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="false" data-active="false" data-company="Company C" data-devtype="Laptop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--danger);margin-right:6px;" title="REMOVED"></span>
+            <a class="dev-link" href="report.php?serial=DE33E42&computer=BR-LT-0177"><b>BR-LT-0177</b></a>
+            <span class="badge badge-muted" style="vertical-align:middle;margin-left:4px">HISTORICAL</span>
+          </td>
+          <td>Quality Office</td>
+          <td>Dell Latitude 5420</td>
+          <td class="text-info font-semibold">West Branch / Main</td>
+          <td><code>DE33E42</code></td>
+          <td>LAPTP-DEL-08</td>
+          <td class="">11th Gen Intel(R) Core(TM) i5-1145G7</td>
+          <td class=""></td>
+          <td class=""></td>
+          <td class="text-danger font-bold">2026-05-15 06:00:00</td>
+          <td></td>
+        </tr>
+        <tr data-status="Online" data-ram="4" data-hdd="true" data-legacy="true" data-lldays="0" data-site="Head Office / Main Building" data-model="Dell OptiPlex 3050" data-os="Windows 10 Pro" data-winver="22H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company A" data-devtype="Desktop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=DE355D3&computer=HO-PC-0184"><b>HO-PC-0184</b></a>
+            
+          </td>
+          <td>Head of Finance</td>
+          <td>Dell OptiPlex 3050</td>
+          <td class="text-info font-semibold">Head Office / Main Building</td>
+          <td><code>DE355D3</code></td>
+          <td>DSKTP-DEL-04</td>
+          <td class="text-danger font-bold">Intel(R) Core(TM) i5-7500 CPU @ 3.40GHz</td>
+          <td class="text-danger font-bold">HDD</td>
+          <td class="text-danger font-bold">4 GB</td>
+          <td class="">2026-10-29 05:00:00</td>
+          <td>2026-10-29 03:52:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="5" data-site="Head Office / Annex" data-model="HP EliteBook 840 G10" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company A" data-devtype="Laptop" data-brand="HP">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=HP36D64&computer=HO-LT-0191"><b>HO-LT-0191</b></a>
+            
+          </td>
+          <td>Payroll</td>
+          <td>HP EliteBook 840 G10</td>
+          <td class="text-info font-semibold">Head Office / Annex</td>
+          <td><code>HP36D64</code></td>
+          <td>LAPTP-HP-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i7-1365U</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="">2026-10-24 09:00:00</td>
+          <td>2026-10-29 07:00:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="4" data-hdd="true" data-legacy="true" data-lldays="0" data-site="North Campus / Building A" data-model="HP ProDesk 600 G1" data-os="Windows 10 Pro" data-winver="22H2" data-cfull="true" data-hasdata="true" data-active="true" data-company="Company B" data-devtype="Desktop" data-brand="HP">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=HP384F5&computer=NC-PC-0198"><b>NC-PC-0198</b></a>
+            
+          </td>
+          <td></td>
+          <td>HP ProDesk 600 G1</td>
+          <td class="text-info font-semibold">North Campus / Building A</td>
+          <td><code>HP384F5</code></td>
+          <td>DSKTP-HP-04</td>
+          <td class="text-danger font-bold">Intel(R) Core(TM) i3-4160 CPU @ 3.60GHz</td>
+          <td class="text-danger font-bold">HDD</td>
+          <td class="text-danger font-bold">4 GB</td>
+          <td class="">2026-10-29 08:00:00</td>
+          <td>2026-10-29 02:02:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="5" data-site="North Campus / Building B" data-model="Lenovo ThinkPad T14 Gen 4" data-os="Windows 11 Pro" data-winver="23H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company B" data-devtype="Laptop" data-brand="Lenovo">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=LE39C86&computer=NC-LT-0205"><b>NC-LT-0205</b></a>
+            
+          </td>
+          <td>Finance - Accountant</td>
+          <td>Lenovo ThinkPad T14 Gen 4</td>
+          <td class="text-info font-semibold">North Campus / Building B</td>
+          <td><code>LE39C86</code></td>
+          <td>LAPTP-LEN-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i7-1355U</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="">2026-10-24 02:00:00</td>
+          <td>2026-10-29 06:11:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="8" data-hdd="false" data-legacy="false" data-lldays="8" data-site="East Branch / Main" data-model="Lenovo ThinkCentre M70q" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company C" data-devtype="Desktop" data-brand="Lenovo">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=LE3B417&computer=BR-PC-0212"><b>BR-PC-0212</b></a>
+            
+          </td>
+          <td>HR Officer</td>
+          <td>Lenovo ThinkCentre M70q</td>
+          <td class="text-info font-semibold">East Branch / Main</td>
+          <td><code>LE3B417</code></td>
+          <td>DSKTP-LEN-08</td>
+          <td class="">12th Gen Intel(R) Core(TM) i5-12400T</td>
+          <td class="">SSD</td>
+          <td class="">8 GB</td>
+          <td class="">2026-10-21 10:00:00</td>
+          <td>2026-10-29 06:01:00</td>
+        </tr>
+        <tr data-status="Offline" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="47" data-site="West Branch / Main" data-model="Dell OptiPlex 7010" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company C" data-devtype="Desktop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--warn);margin-right:6px;" title="Offline"></span>
+            <a class="dev-link" href="report.php?serial=DE3CBA8&computer=BR-PC-0219"><b>BR-PC-0219</b></a>
+            
+          </td>
+          <td>Reception</td>
+          <td>Dell OptiPlex 7010</td>
+          <td class="text-info font-semibold">West Branch / Main</td>
+          <td><code>DE3CBA8</code></td>
+          <td>DSKTP-DEL-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i5-13500</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="text-danger font-bold">2026-09-12 04:00:00</td>
+          <td>2026-10-26 20:27:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="3" data-site="Head Office / Main Building" data-model="Dell Latitude 5440" data-os="Windows 11 Pro" data-winver="23H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company A" data-devtype="Laptop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=DE3E330&computer=HO-LT-0226"><b>HO-LT-0226</b></a>
+            
+          </td>
+          <td>Procurement</td>
+          <td>Dell Latitude 5440</td>
+          <td class="text-info font-semibold">Head Office / Main Building</td>
+          <td><code>DE3E330</code></td>
+          <td>LAPTP-DEL-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i5-1345U</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="">2026-10-26 05:00:00</td>
+          <td>2026-10-29 06:18:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="8" data-hdd="false" data-legacy="false" data-lldays="5" data-site="Head Office / Annex" data-model="HP ProDesk 400 G7" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company A" data-devtype="Desktop" data-brand="HP">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=HP3FAC1&computer=HO-PC-0233"><b>HO-PC-0233</b></a>
+            
+          </td>
+          <td>IT Service Desk</td>
+          <td>HP ProDesk 400 G7</td>
+          <td class="text-info font-semibold">Head Office / Annex</td>
+          <td><code>HP3FAC1</code></td>
+          <td>DSKTP-HP-08</td>
+          <td class="">Intel(R) Core(TM) i5-10500 CPU @ 3.10GHz</td>
+          <td class="">SSD</td>
+          <td class="">8 GB</td>
+          <td class="">2026-10-24 03:00:00</td>
+          <td>2026-10-29 07:29:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="8" data-hdd="false" data-legacy="false" data-lldays="3" data-site="North Campus / Building A" data-model="Dell Latitude 5420" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company B" data-devtype="Laptop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=DE41252&computer=NC-LT-0240"><b>NC-LT-0240</b></a>
+            
+          </td>
+          <td>Customer Service</td>
+          <td>Dell Latitude 5420</td>
+          <td class="text-info font-semibold">North Campus / Building A</td>
+          <td><code>DE41252</code></td>
+          <td>LAPTP-DEL-08</td>
+          <td class="">11th Gen Intel(R) Core(TM) i5-1145G7</td>
+          <td class="">SSD</td>
+          <td class="">8 GB</td>
+          <td class="">2026-10-26 02:00:00</td>
+          <td>2026-10-29 05:26:00</td>
+        </tr>
+        <tr data-status="Offline" data-ram="4" data-hdd="true" data-legacy="true" data-lldays="3" data-site="North Campus / Building B" data-model="Dell OptiPlex 3050" data-os="Windows 10 Pro" data-winver="22H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company B" data-devtype="Desktop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--warn);margin-right:6px;" title="Offline"></span>
+            <a class="dev-link" href="report.php?serial=DE429E3&computer=NC-PC-0247"><b>NC-PC-0247</b></a>
+            
+          </td>
+          <td>Operations Analyst</td>
+          <td>Dell OptiPlex 3050</td>
+          <td class="text-info font-semibold">North Campus / Building B</td>
+          <td><code>DE429E3</code></td>
+          <td>DSKTP-DEL-04</td>
+          <td class="text-danger font-bold">Intel(R) Core(TM) i5-7500 CPU @ 3.40GHz</td>
+          <td class="text-danger font-bold">HDD</td>
+          <td class="text-danger font-bold">4 GB</td>
+          <td class="">2026-10-26 04:00:00</td>
+          <td>2026-10-26 07:35:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="3" data-site="East Branch / Main" data-model="HP EliteBook 840 G10" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company C" data-devtype="Laptop" data-brand="HP">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=HP44174&computer=BR-LT-0254"><b>BR-LT-0254</b></a>
+            
+          </td>
+          <td>Sales Desk</td>
+          <td>HP EliteBook 840 G10</td>
+          <td class="text-info font-semibold">East Branch / Main</td>
+          <td><code>HP44174</code></td>
+          <td>LAPTP-HP-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i7-1365U</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="">2026-10-26 03:00:00</td>
+          <td>2026-10-29 08:22:00</td>
+        </tr>
+        <tr data-status="Offline" data-ram="4" data-hdd="true" data-legacy="true" data-lldays="0" data-site="West Branch / Main" data-model="HP ProDesk 600 G1" data-os="Windows 10 Pro" data-winver="22H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company C" data-devtype="Desktop" data-brand="HP">
+          <td>
+            <span class="dot" style="background:var(--warn);margin-right:6px;" title="Offline"></span>
+            <a class="dev-link" href="report.php?serial=HP45905&computer=BR-PC-0261"><b>BR-PC-0261</b></a>
+            
+          </td>
+          <td>Logistics</td>
+          <td>HP ProDesk 600 G1</td>
+          <td class="text-info font-semibold">West Branch / Main</td>
+          <td><code>HP45905</code></td>
+          <td>DSKTP-HP-04</td>
+          <td class="text-danger font-bold">Intel(R) Core(TM) i3-4160 CPU @ 3.60GHz</td>
+          <td class="text-danger font-bold">HDD</td>
+          <td class="text-danger font-bold">4 GB</td>
+          <td class="">2026-10-29 08:00:00</td>
+          <td>2026-10-23 20:52:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="2" data-site="Head Office / Main Building" data-model="Lenovo ThinkPad T14 Gen 4" data-os="Windows 11 Pro" data-winver="23H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company A" data-devtype="Laptop" data-brand="Lenovo">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=LE47096&computer=HO-LT-0268"><b>HO-LT-0268</b></a>
+            
+          </td>
+          <td>Marketing</td>
+          <td>Lenovo ThinkPad T14 Gen 4</td>
+          <td class="text-info font-semibold">Head Office / Main Building</td>
+          <td><code>LE47096</code></td>
+          <td>LAPTP-LEN-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i7-1355U</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="">2026-10-27 04:00:00</td>
+          <td>2026-10-29 01:56:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="8" data-hdd="false" data-legacy="false" data-lldays="3" data-site="Head Office / Annex" data-model="Lenovo ThinkCentre M70q" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="true" data-hasdata="true" data-active="true" data-company="Company A" data-devtype="Desktop" data-brand="Lenovo">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=LE48827&computer=HO-PC-0275"><b>HO-PC-0275</b></a>
+            
+          </td>
+          <td>Facilities</td>
+          <td>Lenovo ThinkCentre M70q</td>
+          <td class="text-info font-semibold">Head Office / Annex</td>
+          <td><code>LE48827</code></td>
+          <td>DSKTP-LEN-08</td>
+          <td class="">12th Gen Intel(R) Core(TM) i5-12400T</td>
+          <td class="">SSD</td>
+          <td class="">8 GB</td>
+          <td class="">2026-10-26 10:00:00</td>
+          <td>2026-10-29 07:58:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="1" data-site="North Campus / Building A" data-model="Dell OptiPlex 7010" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company B" data-devtype="Desktop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=DE49FB8&computer=NC-PC-0282"><b>NC-PC-0282</b></a>
+            
+          </td>
+          <td>Quality Office</td>
+          <td>Dell OptiPlex 7010</td>
+          <td class="text-info font-semibold">North Campus / Building A</td>
+          <td><code>DE49FB8</code></td>
+          <td>DSKTP-DEL-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i5-13500</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="">2026-10-28 05:00:00</td>
+          <td>2026-10-29 08:01:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="0" data-site="North Campus / Building B" data-model="Dell Latitude 5440" data-os="Windows 11 Pro" data-winver="23H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company B" data-devtype="Laptop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=DE4B740&computer=NC-LT-0289"><b>NC-LT-0289</b></a>
+            
+          </td>
+          <td>Head of Finance</td>
+          <td>Dell Latitude 5440</td>
+          <td class="text-info font-semibold">North Campus / Building B</td>
+          <td><code>DE4B740</code></td>
+          <td>LAPTP-DEL-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i5-1345U</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="">2026-10-29 06:00:00</td>
+          <td>2026-10-29 01:23:00</td>
+        </tr>
+        <tr data-status="Offline" data-ram="8" data-hdd="false" data-legacy="false" data-lldays="0" data-site="East Branch / Main" data-model="HP ProDesk 400 G7" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company C" data-devtype="Desktop" data-brand="HP">
+          <td>
+            <span class="dot" style="background:var(--warn);margin-right:6px;" title="Offline"></span>
+            <a class="dev-link" href="report.php?serial=HP4CED1&computer=BR-PC-0296"><b>BR-PC-0296</b></a>
+            
+          </td>
+          <td>Payroll</td>
+          <td>HP ProDesk 400 G7</td>
+          <td class="text-info font-semibold">East Branch / Main</td>
+          <td><code>HP4CED1</code></td>
+          <td>DSKTP-HP-08</td>
+          <td class="">Intel(R) Core(TM) i5-10500 CPU @ 3.10GHz</td>
+          <td class="">SSD</td>
+          <td class="">8 GB</td>
+          <td class="">2026-10-29 06:00:00</td>
+          <td>2026-10-23 14:06:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="8" data-hdd="false" data-legacy="false" data-lldays="0" data-site="West Branch / Main" data-model="Dell Latitude 5420" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company C" data-devtype="Laptop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=DE4E662&computer=BR-LT-0303"><b>BR-LT-0303</b></a>
+            
+          </td>
+          <td></td>
+          <td>Dell Latitude 5420</td>
+          <td class="text-info font-semibold">West Branch / Main</td>
+          <td><code>DE4E662</code></td>
+          <td>LAPTP-DEL-08</td>
+          <td class="">11th Gen Intel(R) Core(TM) i5-1145G7</td>
+          <td class="">SSD</td>
+          <td class="">8 GB</td>
+          <td class="">2026-10-29 05:00:00</td>
+          <td>2026-10-29 07:10:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="4" data-hdd="true" data-legacy="true" data-lldays="47" data-site="Head Office / Main Building" data-model="Dell OptiPlex 3050" data-os="Windows 10 Pro" data-winver="22H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company A" data-devtype="Desktop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=DE4FDF3&computer=HO-PC-0310"><b>HO-PC-0310</b></a>
+            
+          </td>
+          <td>Finance - Accountant</td>
+          <td>Dell OptiPlex 3050</td>
+          <td class="text-info font-semibold">Head Office / Main Building</td>
+          <td><code>DE4FDF3</code></td>
+          <td>DSKTP-DEL-04</td>
+          <td class="text-danger font-bold">Intel(R) Core(TM) i5-7500 CPU @ 3.40GHz</td>
+          <td class="text-danger font-bold">HDD</td>
+          <td class="text-danger font-bold">4 GB</td>
+          <td class="text-danger font-bold">2026-09-12 02:00:00</td>
+          <td>2026-10-29 09:55:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="0" data-site="Head Office / Annex" data-model="HP EliteBook 840 G10" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company A" data-devtype="Laptop" data-brand="HP">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=HP51584&computer=HO-LT-0317"><b>HO-LT-0317</b></a>
+            
+          </td>
+          <td>HR Officer</td>
+          <td>HP EliteBook 840 G10</td>
+          <td class="text-info font-semibold">Head Office / Annex</td>
+          <td><code>HP51584</code></td>
+          <td>LAPTP-HP-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i7-1365U</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="">2026-10-29 05:00:00</td>
+          <td>2026-10-29 04:41:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="4" data-hdd="true" data-legacy="true" data-lldays="3" data-site="North Campus / Building A" data-model="HP ProDesk 600 G1" data-os="Windows 10 Pro" data-winver="22H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company B" data-devtype="Desktop" data-brand="HP">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=HP52D15&computer=NC-PC-0324"><b>NC-PC-0324</b></a>
+            
+          </td>
+          <td>Reception</td>
+          <td>HP ProDesk 600 G1</td>
+          <td class="text-info font-semibold">North Campus / Building A</td>
+          <td><code>HP52D15</code></td>
+          <td>DSKTP-HP-04</td>
+          <td class="text-danger font-bold">Intel(R) Core(TM) i3-4160 CPU @ 3.60GHz</td>
+          <td class="text-danger font-bold">HDD</td>
+          <td class="text-danger font-bold">4 GB</td>
+          <td class="">2026-10-26 09:00:00</td>
+          <td>2026-10-29 08:28:00</td>
+        </tr>
+        <tr data-status="Offline" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="8" data-site="North Campus / Building B" data-model="Lenovo ThinkPad T14 Gen 4" data-os="Windows 11 Pro" data-winver="23H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company B" data-devtype="Laptop" data-brand="Lenovo">
+          <td>
+            <span class="dot" style="background:var(--warn);margin-right:6px;" title="Offline"></span>
+            <a class="dev-link" href="report.php?serial=LE544A6&computer=NC-LT-0331"><b>NC-LT-0331</b></a>
+            
+          </td>
+          <td>Procurement</td>
+          <td>Lenovo ThinkPad T14 Gen 4</td>
+          <td class="text-info font-semibold">North Campus / Building B</td>
+          <td><code>LE544A6</code></td>
+          <td>LAPTP-LEN-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i7-1355U</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="">2026-10-21 02:00:00</td>
+          <td>2026-10-24 00:27:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="8" data-hdd="false" data-legacy="false" data-lldays="3" data-site="East Branch / Main" data-model="Lenovo ThinkCentre M70q" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company C" data-devtype="Desktop" data-brand="Lenovo">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=LE55C37&computer=BR-PC-0338"><b>BR-PC-0338</b></a>
+            
+          </td>
+          <td>IT Service Desk</td>
+          <td>Lenovo ThinkCentre M70q</td>
+          <td class="text-info font-semibold">East Branch / Main</td>
+          <td><code>LE55C37</code></td>
+          <td>DSKTP-LEN-08</td>
+          <td class="">12th Gen Intel(R) Core(TM) i5-12400T</td>
+          <td class="">SSD</td>
+          <td class="">8 GB</td>
+          <td class="">2026-10-26 08:00:00</td>
+          <td>2026-10-29 05:24:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="0" data-site="West Branch / Main" data-model="Dell OptiPlex 7010" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company C" data-devtype="Desktop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=DE573C8&computer=BR-PC-0345"><b>BR-PC-0345</b></a>
+            
+          </td>
+          <td>Customer Service</td>
+          <td>Dell OptiPlex 7010</td>
+          <td class="text-info font-semibold">West Branch / Main</td>
+          <td><code>DE573C8</code></td>
+          <td>DSKTP-DEL-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i5-13500</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="">2026-10-29 02:00:00</td>
+          <td>2026-10-29 06:30:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="2" data-site="Head Office / Main Building" data-model="Dell Latitude 5440" data-os="Windows 11 Pro" data-winver="23H2" data-cfull="true" data-hasdata="true" data-active="true" data-company="Company A" data-devtype="Laptop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=DE58B50&computer=HO-LT-0352"><b>HO-LT-0352</b></a>
+            
+          </td>
+          <td>Operations Analyst</td>
+          <td>Dell Latitude 5440</td>
+          <td class="text-info font-semibold">Head Office / Main Building</td>
+          <td><code>DE58B50</code></td>
+          <td>LAPTP-DEL-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i5-1345U</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="">2026-10-27 05:00:00</td>
+          <td>2026-10-29 02:27:00</td>
+        </tr>
+        <tr data-status="Offline" data-ram="8" data-hdd="false" data-legacy="false" data-lldays="0" data-site="Head Office / Annex" data-model="HP ProDesk 400 G7" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company A" data-devtype="Desktop" data-brand="HP">
+          <td>
+            <span class="dot" style="background:var(--warn);margin-right:6px;" title="Offline"></span>
+            <a class="dev-link" href="report.php?serial=HP5A2E1&computer=HO-PC-0359"><b>HO-PC-0359</b></a>
+            
+          </td>
+          <td>Sales Desk</td>
+          <td>HP ProDesk 400 G7</td>
+          <td class="text-info font-semibold">Head Office / Annex</td>
+          <td><code>HP5A2E1</code></td>
+          <td>DSKTP-HP-08</td>
+          <td class="">Intel(R) Core(TM) i5-10500 CPU @ 3.10GHz</td>
+          <td class="">SSD</td>
+          <td class="">8 GB</td>
+          <td class="">2026-10-29 07:00:00</td>
+          <td>2026-10-28 00:16:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="8" data-hdd="false" data-legacy="false" data-lldays="0" data-site="North Campus / Building A" data-model="Dell Latitude 5420" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company B" data-devtype="Laptop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=DE5BA72&computer=NC-LT-0366"><b>NC-LT-0366</b></a>
+            
+          </td>
+          <td>Logistics</td>
+          <td>Dell Latitude 5420</td>
+          <td class="text-info font-semibold">North Campus / Building A</td>
+          <td><code>DE5BA72</code></td>
+          <td>LAPTP-DEL-08</td>
+          <td class="">11th Gen Intel(R) Core(TM) i5-1145G7</td>
+          <td class="">SSD</td>
+          <td class="">8 GB</td>
+          <td class="">2026-10-29 01:00:00</td>
+          <td>2026-10-29 06:10:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="4" data-hdd="true" data-legacy="true" data-lldays="0" data-site="North Campus / Building B" data-model="Dell OptiPlex 3050" data-os="Windows 10 Pro" data-winver="22H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company B" data-devtype="Desktop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=DE5D203&computer=NC-PC-0373"><b>NC-PC-0373</b></a>
+            
+          </td>
+          <td>Marketing</td>
+          <td>Dell OptiPlex 3050</td>
+          <td class="text-info font-semibold">North Campus / Building B</td>
+          <td><code>DE5D203</code></td>
+          <td>DSKTP-DEL-04</td>
+          <td class="text-danger font-bold">Intel(R) Core(TM) i5-7500 CPU @ 3.40GHz</td>
+          <td class="text-danger font-bold">HDD</td>
+          <td class="text-danger font-bold">4 GB</td>
+          <td class="">2026-10-29 07:00:00</td>
+          <td>2026-10-29 08:46:00</td>
+        </tr>
+        <tr data-status="REMOVED" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="130" data-site="East Branch / Main" data-model="HP EliteBook 840 G10" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="false" data-company="Company C" data-devtype="Laptop" data-brand="HP">
+          <td>
+            <span class="dot" style="background:var(--danger);margin-right:6px;" title="REMOVED"></span>
+            <a class="dev-link" href="report.php?serial=HP5E994&computer=BR-LT-0380"><b>BR-LT-0380</b></a>
+            <span class="badge badge-muted" style="vertical-align:middle;margin-left:4px">HISTORICAL</span>
+          </td>
+          <td>Facilities</td>
+          <td>HP EliteBook 840 G10</td>
+          <td class="text-info font-semibold">East Branch / Main</td>
+          <td><code>HP5E994</code></td>
+          <td>LAPTP-HP-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i7-1365U</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="text-danger font-bold">2026-06-21 06:00:00</td>
+          <td>2026-10-24 13:40:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="4" data-hdd="true" data-legacy="true" data-lldays="5" data-site="West Branch / Main" data-model="HP ProDesk 600 G1" data-os="Windows 10 Pro" data-winver="22H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company C" data-devtype="Desktop" data-brand="HP">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=HP60125&computer=BR-PC-0387"><b>BR-PC-0387</b></a>
+            
+          </td>
+          <td>Quality Office</td>
+          <td>HP ProDesk 600 G1</td>
+          <td class="text-info font-semibold">West Branch / Main</td>
+          <td><code>HP60125</code></td>
+          <td>DSKTP-HP-04</td>
+          <td class="text-danger font-bold">Intel(R) Core(TM) i3-4160 CPU @ 3.60GHz</td>
+          <td class="text-danger font-bold">HDD</td>
+          <td class="text-danger font-bold">4 GB</td>
+          <td class="">2026-10-24 01:00:00</td>
+          <td>2026-10-29 00:05:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="8" data-site="Head Office / Main Building" data-model="Lenovo ThinkPad T14 Gen 4" data-os="Windows 11 Pro" data-winver="23H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company A" data-devtype="Laptop" data-brand="Lenovo">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=LE618B6&computer=HO-LT-0394"><b>HO-LT-0394</b></a>
+            
+          </td>
+          <td>Head of Finance</td>
+          <td>Lenovo ThinkPad T14 Gen 4</td>
+          <td class="text-info font-semibold">Head Office / Main Building</td>
+          <td><code>LE618B6</code></td>
+          <td>LAPTP-LEN-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i7-1355U</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="">2026-10-21 04:00:00</td>
+          <td>2026-10-29 06:41:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="8" data-hdd="false" data-legacy="false" data-lldays="47" data-site="Head Office / Annex" data-model="Lenovo ThinkCentre M70q" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company A" data-devtype="Desktop" data-brand="Lenovo">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=LE63047&computer=HO-PC-0401"><b>HO-PC-0401</b></a>
+            
+          </td>
+          <td>Payroll</td>
+          <td>Lenovo ThinkCentre M70q</td>
+          <td class="text-info font-semibold">Head Office / Annex</td>
+          <td><code>LE63047</code></td>
+          <td>DSKTP-LEN-08</td>
+          <td class="">12th Gen Intel(R) Core(TM) i5-12400T</td>
+          <td class="">SSD</td>
+          <td class="">8 GB</td>
+          <td class="text-danger font-bold">2026-09-12 05:00:00</td>
+          <td>2026-10-29 02:42:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="0" data-site="North Campus / Building A" data-model="Dell OptiPlex 7010" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company B" data-devtype="Desktop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=DE647D8&computer=NC-PC-0408"><b>NC-PC-0408</b></a>
+            
+          </td>
+          <td></td>
+          <td>Dell OptiPlex 7010</td>
+          <td class="text-info font-semibold">North Campus / Building A</td>
+          <td><code>DE647D8</code></td>
+          <td>DSKTP-DEL-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i5-13500</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="">2026-10-29 09:00:00</td>
+          <td>2026-10-29 08:53:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="8" data-site="North Campus / Building B" data-model="Dell Latitude 5440" data-os="Windows 11 Pro" data-winver="23H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company B" data-devtype="Laptop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=DE65F60&computer=NC-LT-0415"><b>NC-LT-0415</b></a>
+            
+          </td>
+          <td>Finance - Accountant</td>
+          <td>Dell Latitude 5440</td>
+          <td class="text-info font-semibold">North Campus / Building B</td>
+          <td><code>DE65F60</code></td>
+          <td>LAPTP-DEL-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i5-1345U</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="">2026-10-21 09:00:00</td>
+          <td>2026-10-29 05:41:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="8" data-hdd="false" data-legacy="false" data-lldays="0" data-site="East Branch / Main" data-model="HP ProDesk 400 G7" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company C" data-devtype="Desktop" data-brand="HP">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=HP676F1&computer=BR-PC-0422"><b>BR-PC-0422</b></a>
+            
+          </td>
+          <td>HR Officer</td>
+          <td>HP ProDesk 400 G7</td>
+          <td class="text-info font-semibold">East Branch / Main</td>
+          <td><code>HP676F1</code></td>
+          <td>DSKTP-HP-08</td>
+          <td class="">Intel(R) Core(TM) i5-10500 CPU @ 3.10GHz</td>
+          <td class="">SSD</td>
+          <td class="">8 GB</td>
+          <td class="">2026-10-29 04:00:00</td>
+          <td>2026-10-29 06:48:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="8" data-hdd="false" data-legacy="false" data-lldays="0" data-site="West Branch / Main" data-model="Dell Latitude 5420" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="true" data-hasdata="true" data-active="true" data-company="Company C" data-devtype="Laptop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=DE68E82&computer=BR-LT-0429"><b>BR-LT-0429</b></a>
+            
+          </td>
+          <td>Reception</td>
+          <td>Dell Latitude 5420</td>
+          <td class="text-info font-semibold">West Branch / Main</td>
+          <td><code>DE68E82</code></td>
+          <td>LAPTP-DEL-08</td>
+          <td class="">11th Gen Intel(R) Core(TM) i5-1145G7</td>
+          <td class="">SSD</td>
+          <td class="">8 GB</td>
+          <td class="">2026-10-29 09:00:00</td>
+          <td>2026-10-29 02:22:00</td>
+        </tr>
+        <tr data-status="Offline" data-ram="4" data-hdd="true" data-legacy="true" data-lldays="0" data-site="Head Office / Main Building" data-model="Dell OptiPlex 3050" data-os="Windows 10 Pro" data-winver="22H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company A" data-devtype="Desktop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--warn);margin-right:6px;" title="Offline"></span>
+            <a class="dev-link" href="report.php?serial=DE6A613&computer=HO-PC-0436"><b>HO-PC-0436</b></a>
+            
+          </td>
+          <td>Procurement</td>
+          <td>Dell OptiPlex 3050</td>
+          <td class="text-info font-semibold">Head Office / Main Building</td>
+          <td><code>DE6A613</code></td>
+          <td>DSKTP-DEL-04</td>
+          <td class="text-danger font-bold">Intel(R) Core(TM) i5-7500 CPU @ 3.40GHz</td>
+          <td class="text-danger font-bold">HDD</td>
+          <td class="text-danger font-bold">4 GB</td>
+          <td class="">2026-10-29 10:00:00</td>
+          <td>2026-10-24 15:58:00</td>
+        </tr>
+        <tr data-status="REMOVED" data-ram="0" data-hdd="false" data-legacy="false" data-lldays="130" data-site="Head Office / Annex" data-model="HP EliteBook 840 G10" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="false" data-active="false" data-company="Company A" data-devtype="Laptop" data-brand="HP">
+          <td>
+            <span class="dot" style="background:var(--danger);margin-right:6px;" title="REMOVED"></span>
+            <a class="dev-link" href="report.php?serial=HP6BDA4&computer=HO-LT-0443"><b>HO-LT-0443</b></a>
+            <span class="badge badge-muted" style="vertical-align:middle;margin-left:4px">HISTORICAL</span>
+          </td>
+          <td>IT Service Desk</td>
+          <td>HP EliteBook 840 G10</td>
+          <td class="text-info font-semibold">Head Office / Annex</td>
+          <td><code>HP6BDA4</code></td>
+          <td>LAPTP-HP-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i7-1365U</td>
+          <td class=""></td>
+          <td class=""></td>
+          <td class="text-danger font-bold">2026-06-21 08:00:00</td>
+          <td></td>
+        </tr>
+        <tr data-status="Online" data-ram="4" data-hdd="true" data-legacy="true" data-lldays="8" data-site="North Campus / Building A" data-model="HP ProDesk 600 G1" data-os="Windows 10 Pro" data-winver="22H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company B" data-devtype="Desktop" data-brand="HP">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=HP6D535&computer=NC-PC-0450"><b>NC-PC-0450</b></a>
+            
+          </td>
+          <td>Customer Service</td>
+          <td>HP ProDesk 600 G1</td>
+          <td class="text-info font-semibold">North Campus / Building A</td>
+          <td><code>HP6D535</code></td>
+          <td>DSKTP-HP-04</td>
+          <td class="text-danger font-bold">Intel(R) Core(TM) i3-4160 CPU @ 3.60GHz</td>
+          <td class="text-danger font-bold">HDD</td>
+          <td class="text-danger font-bold">4 GB</td>
+          <td class="">2026-10-21 04:00:00</td>
+          <td>2026-10-29 08:55:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="2" data-site="North Campus / Building B" data-model="Lenovo ThinkPad T14 Gen 4" data-os="Windows 11 Pro" data-winver="23H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company B" data-devtype="Laptop" data-brand="Lenovo">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=LE6ECC6&computer=NC-LT-0457"><b>NC-LT-0457</b></a>
+            
+          </td>
+          <td>Operations Analyst</td>
+          <td>Lenovo ThinkPad T14 Gen 4</td>
+          <td class="text-info font-semibold">North Campus / Building B</td>
+          <td><code>LE6ECC6</code></td>
+          <td>LAPTP-LEN-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i7-1355U</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="">2026-10-27 06:00:00</td>
+          <td>2026-10-29 02:10:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="8" data-hdd="false" data-legacy="false" data-lldays="5" data-site="East Branch / Main" data-model="Lenovo ThinkCentre M70q" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company C" data-devtype="Desktop" data-brand="Lenovo">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=LE70457&computer=BR-PC-0464"><b>BR-PC-0464</b></a>
+            
+          </td>
+          <td>Sales Desk</td>
+          <td>Lenovo ThinkCentre M70q</td>
+          <td class="text-info font-semibold">East Branch / Main</td>
+          <td><code>LE70457</code></td>
+          <td>DSKTP-LEN-08</td>
+          <td class="">12th Gen Intel(R) Core(TM) i5-12400T</td>
+          <td class="">SSD</td>
+          <td class="">8 GB</td>
+          <td class="">2026-10-24 02:00:00</td>
+          <td>2026-10-29 01:37:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="0" data-site="West Branch / Main" data-model="Dell OptiPlex 7010" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company C" data-devtype="Desktop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=DE71BE8&computer=BR-PC-0471"><b>BR-PC-0471</b></a>
+            
+          </td>
+          <td>Logistics</td>
+          <td>Dell OptiPlex 7010</td>
+          <td class="text-info font-semibold">West Branch / Main</td>
+          <td><code>DE71BE8</code></td>
+          <td>DSKTP-DEL-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i5-13500</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="">2026-10-29 01:00:00</td>
+          <td>2026-10-29 00:40:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="0" data-site="Head Office / Main Building" data-model="Dell Latitude 5440" data-os="Windows 11 Pro" data-winver="23H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company A" data-devtype="Laptop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=DE73370&computer=HO-LT-0478"><b>HO-LT-0478</b></a>
+            
+          </td>
+          <td>Marketing</td>
+          <td>Dell Latitude 5440</td>
+          <td class="text-info font-semibold">Head Office / Main Building</td>
+          <td><code>DE73370</code></td>
+          <td>LAPTP-DEL-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i5-1345U</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="">2026-10-29 01:00:00</td>
+          <td>2026-10-29 01:47:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="8" data-hdd="false" data-legacy="false" data-lldays="0" data-site="Head Office / Annex" data-model="HP ProDesk 400 G7" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company A" data-devtype="Desktop" data-brand="HP">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=HP74B01&computer=HO-PC-0485"><b>HO-PC-0485</b></a>
+            
+          </td>
+          <td>Facilities</td>
+          <td>HP ProDesk 400 G7</td>
+          <td class="text-info font-semibold">Head Office / Annex</td>
+          <td><code>HP74B01</code></td>
+          <td>DSKTP-HP-08</td>
+          <td class="">Intel(R) Core(TM) i5-10500 CPU @ 3.10GHz</td>
+          <td class="">SSD</td>
+          <td class="">8 GB</td>
+          <td class="">2026-10-29 10:00:00</td>
+          <td>2026-10-29 01:15:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="8" data-hdd="false" data-legacy="false" data-lldays="47" data-site="North Campus / Building A" data-model="Dell Latitude 5420" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company B" data-devtype="Laptop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=DE76292&computer=NC-LT-0492"><b>NC-LT-0492</b></a>
+            
+          </td>
+          <td>Quality Office</td>
+          <td>Dell Latitude 5420</td>
+          <td class="text-info font-semibold">North Campus / Building A</td>
+          <td><code>DE76292</code></td>
+          <td>LAPTP-DEL-08</td>
+          <td class="">11th Gen Intel(R) Core(TM) i5-1145G7</td>
+          <td class="">SSD</td>
+          <td class="">8 GB</td>
+          <td class="text-danger font-bold">2026-09-12 01:00:00</td>
+          <td>2026-10-29 08:46:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="4" data-hdd="true" data-legacy="true" data-lldays="0" data-site="North Campus / Building B" data-model="Dell OptiPlex 3050" data-os="Windows 10 Pro" data-winver="22H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company B" data-devtype="Desktop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=DE77A23&computer=NC-PC-0499"><b>NC-PC-0499</b></a>
+            
+          </td>
+          <td>Head of Finance</td>
+          <td>Dell OptiPlex 3050</td>
+          <td class="text-info font-semibold">North Campus / Building B</td>
+          <td><code>DE77A23</code></td>
+          <td>DSKTP-DEL-04</td>
+          <td class="text-danger font-bold">Intel(R) Core(TM) i5-7500 CPU @ 3.40GHz</td>
+          <td class="text-danger font-bold">HDD</td>
+          <td class="text-danger font-bold">4 GB</td>
+          <td class="">2026-10-29 01:00:00</td>
+          <td>2026-10-29 05:43:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="0" data-site="East Branch / Main" data-model="HP EliteBook 840 G10" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="true" data-hasdata="true" data-active="true" data-company="Company C" data-devtype="Laptop" data-brand="HP">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=HP791B4&computer=BR-LT-0506"><b>BR-LT-0506</b></a>
+            
+          </td>
+          <td>Payroll</td>
+          <td>HP EliteBook 840 G10</td>
+          <td class="text-info font-semibold">East Branch / Main</td>
+          <td><code>HP791B4</code></td>
+          <td>LAPTP-HP-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i7-1365U</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="">2026-10-29 01:00:00</td>
+          <td>2026-10-29 08:32:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="4" data-hdd="true" data-legacy="true" data-lldays="3" data-site="West Branch / Main" data-model="HP ProDesk 600 G1" data-os="Windows 10 Pro" data-winver="22H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company C" data-devtype="Desktop" data-brand="HP">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=HP7A945&computer=BR-PC-0513"><b>BR-PC-0513</b></a>
+            
+          </td>
+          <td></td>
+          <td>HP ProDesk 600 G1</td>
+          <td class="text-info font-semibold">West Branch / Main</td>
+          <td><code>HP7A945</code></td>
+          <td>DSKTP-HP-04</td>
+          <td class="text-danger font-bold">Intel(R) Core(TM) i3-4160 CPU @ 3.60GHz</td>
+          <td class="text-danger font-bold">HDD</td>
+          <td class="text-danger font-bold">4 GB</td>
+          <td class="">2026-10-26 05:00:00</td>
+          <td>2026-10-29 05:28:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="0" data-site="Head Office / Main Building" data-model="Lenovo ThinkPad T14 Gen 4" data-os="Windows 11 Pro" data-winver="23H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company A" data-devtype="Laptop" data-brand="Lenovo">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=LE7C0D6&computer=HO-LT-0520"><b>HO-LT-0520</b></a>
+            
+          </td>
+          <td>Finance - Accountant</td>
+          <td>Lenovo ThinkPad T14 Gen 4</td>
+          <td class="text-info font-semibold">Head Office / Main Building</td>
+          <td><code>LE7C0D6</code></td>
+          <td>LAPTP-LEN-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i7-1355U</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="">2026-10-29 06:00:00</td>
+          <td>2026-10-29 03:10:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="8" data-hdd="false" data-legacy="false" data-lldays="2" data-site="Head Office / Annex" data-model="Lenovo ThinkCentre M70q" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company A" data-devtype="Desktop" data-brand="Lenovo">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=LE7D867&computer=HO-PC-0527"><b>HO-PC-0527</b></a>
+            
+          </td>
+          <td>HR Officer</td>
+          <td>Lenovo ThinkCentre M70q</td>
+          <td class="text-info font-semibold">Head Office / Annex</td>
+          <td><code>LE7D867</code></td>
+          <td>DSKTP-LEN-08</td>
+          <td class="">12th Gen Intel(R) Core(TM) i5-12400T</td>
+          <td class="">SSD</td>
+          <td class="">8 GB</td>
+          <td class="">2026-10-27 05:00:00</td>
+          <td>2026-10-29 08:41:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="3" data-site="North Campus / Building A" data-model="Dell OptiPlex 7010" data-os="Windows 11 Pro" data-winver="24H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company B" data-devtype="Desktop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=DE7EFF8&computer=NC-PC-0534"><b>NC-PC-0534</b></a>
+            
+          </td>
+          <td>Reception</td>
+          <td>Dell OptiPlex 7010</td>
+          <td class="text-info font-semibold">North Campus / Building A</td>
+          <td><code>DE7EFF8</code></td>
+          <td>DSKTP-DEL-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i5-13500</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="">2026-10-26 09:00:00</td>
+          <td>2026-10-29 08:40:00</td>
+        </tr>
+        <tr data-status="Online" data-ram="16" data-hdd="false" data-legacy="false" data-lldays="0" data-site="North Campus / Building B" data-model="Dell Latitude 5440" data-os="Windows 11 Pro" data-winver="23H2" data-cfull="false" data-hasdata="true" data-active="true" data-company="Company B" data-devtype="Laptop" data-brand="Dell">
+          <td>
+            <span class="dot" style="background:var(--good);margin-right:6px;" title="Online"></span>
+            <a class="dev-link" href="report.php?serial=DE80780&computer=NC-LT-0541"><b>NC-LT-0541</b></a>
+            
+          </td>
+          <td>Procurement</td>
+          <td>Dell Latitude 5440</td>
+          <td class="text-info font-semibold">North Campus / Building B</td>
+          <td><code>DE80780</code></td>
+          <td>LAPTP-DEL-16</td>
+          <td class="">13th Gen Intel(R) Core(TM) i5-1345U</td>
+          <td class="">SSD</td>
+          <td class="">16 GB</td>
+          <td class="">2026-10-29 05:00:00</td>
+          <td>2026-10-29 08:45:00</td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+  
+  <div id="paginationControls" class="pagination"></div>
+
+</div>
+<footer class="app-footer">Powered by <b>ThomasLab's</b></footer>
+<script>window.exportXLSX = function () { DEMO.toast("Excel export runs on the live system. Try the CSV export instead."); };</script>
+</body></html>

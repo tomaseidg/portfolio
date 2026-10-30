@@ -1,0 +1,397 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<title>Scan Dashboard</title>
+<script>
+(function(){
+  try {
+    var t = localStorage.getItem('itops_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+  } catch (e) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+</script>
+<link rel="stylesheet" href="assets/vendor/tailwind/tailwind.css">
+<script src="../shared/demo-runtime.js"></script>
+<script src="assets/js/demo-data.js"></script>
+<style>
+.container{max-width:1600px;margin:0 auto;padding:28px 40px 44px}
+@media (max-width:768px){.container{padding:20px 16px 32px}}
+.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;border-bottom:3px solid var(--border-strong);padding-bottom:14px}
+.header h1{margin:0;font-size:24px;text-transform:uppercase;letter-spacing:1px;color:var(--accent)}
+.header p{margin:4px 0 0;color:var(--fg-muted);font-size:13px}
+.nav-link{font-size:12px;color:var(--accent);text-decoration:none;font-weight:600}
+.nav-link:hover{text-decoration:underline}
+.info-box{background:var(--accent-soft);border:1px solid var(--accent);color:var(--accent);padding:10px 16px;border-radius:8px;font-size:12px;margin-bottom:18px}
+.warn-box{background:var(--warn-soft);border:1px solid var(--warn);color:var(--warn);padding:10px 16px;border-radius:8px;font-size:12px;margin-bottom:18px}
+.flash-ok{background:var(--good-soft);border:1px solid var(--good);color:var(--good);padding:10px 16px;border-radius:8px;font-size:13px;margin-bottom:18px}
+.flash-err{background:var(--danger-soft);border:1px solid var(--danger);color:var(--danger);padding:10px 16px;border-radius:8px;font-size:13px;margin-bottom:18px}
+.form-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 22px;margin-bottom:24px}
+.form-row{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+.form-group{display:flex;flex-direction:column;gap:5px;min-width:240px}
+.form-group label{font-size:11px;font-weight:700;color:var(--fg-muted);text-transform:uppercase;letter-spacing:.04em}
+.form-group select,.form-group input[type=text],.form-group input[type=number]{padding:9px 11px;border:1px solid var(--border);border-radius:7px;font-size:13px;background:var(--surface-2);color:var(--fg)}
+.form-group select:focus,.form-group input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.form-group .hint{font-size:11px;color:var(--fg-muted)}
+.btn-launch{padding:10px 24px;background:var(--accent);color:var(--accent-fg);border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;transition:.15s}
+.btn-launch:hover{background:var(--accent-hover)}
+.scan-desc{margin-top:16px;padding:12px 16px;background:var(--surface-2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;font-size:12.5px;line-height:1.65;color:var(--fg-muted)}
+.scan-desc b{color:var(--fg);font-weight:700}
+.scan-desc .sd-title{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--accent);font-weight:700;margin-bottom:5px}
+.scan-desc .sd-note{display:block;margin-top:7px;font-size:11.5px;color:var(--fg-subtle)}
+.extra-field{display:none}
+.extra-field.show{display:flex}
+.table-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--border);border-radius:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:10px 13px;text-align:left;border-bottom:1px solid var(--border)}
+th{background:var(--surface-2);color:var(--fg-muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em;font-weight:700}
+.status-pill{display:inline-block;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;color:#fff}
+.progress-wrap{background:var(--border);border-radius:5px;overflow:hidden;height:8px;width:140px}
+.progress-fill{height:100%;background:var(--accent);transition:width .4s}
+.log-link{font-size:11px;color:var(--accent);text-decoration:none}
+.counts{font-size:11px;color:var(--fg-muted)}
+.section-title{font-size:16px;font-weight:700;margin:0 0 12px;display:flex;align-items:center;gap:10px;color:var(--fg)}
+.ou-badge{font-size:10px;color:var(--fg-muted);font-weight:400;text-transform:none}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html" class="brand" title="Go to the home page">
+    <span class="brand-name">IT <b>Operations</b></span>
+    <span class="brand-sub">Device Intelligence Dashboard</span>
+  </a>
+  <nav class="nav"><a href="index.html" class="">Workstation Dashboard</a><a href="users_report.php" class="">Users Dashboard</a><a href="assets_report.php" class="">Assets Dashboard</a><a href="alerts_report.php" class="">Alerts Dashboard<span class="nav-badge">19</span></a><a href="scan_dashboard.html" class="active">Scan Dashboard</a></nav>
+  <div class="flex items-center gap-3">
+    <button type="button" class="theme-toggle" onclick="appToggleTheme()" title="Toggle light/dark theme" aria-label="Toggle light/dark theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+    </button>
+    <div class="relative has-tooltip">
+      <button class="theme-toggle" style="border-radius:50%;padding:0" onclick="document.getElementById('ghDropdown').classList.toggle('open')">
+        <span class="avatar">D</span>
+      </button>
+      <div class="tooltip">Demo Operator &middot; @demo.operator</div>
+      <div class="dropdown" id="ghDropdown">
+        <div class="dd-head"><b>Demo Operator</b>@demo.operator</div>
+        <a href="change_password.php">Change Password</a>
+        <a href="logout.php" class="dd-danger">Logout</a>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="assets/js/theme-toggle.js"></script>
+<script>
+document.addEventListener('click', function(e){
+    const dd = document.getElementById('ghDropdown');
+    const btn = document.querySelector('.avatar').closest('button');
+    if (dd && dd.classList.contains('open') && !dd.contains(e.target) && !btn.contains(e.target)) {
+        dd.classList.remove('open');
+    }
+});
+</script>
+<div class="container">
+  <div id="demoFlash"></div>
+
+  
+  <div class="form-panel">
+    <h2 class="section-title">Launch a Scan</h2>
+    <form action="scan_trigger.php" method="POST" id="scanForm">
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Scan Type</label>
+          <select name="scan_type" id="scanType" onchange="toggleFields()">
+            <option value="All">Full Hardware Inventory — every device in AD</option>
+            <option value="ADOnly">Active Directory Refresh — no device contact</option>
+            <option value="Logs">Event Log Collection — device health events</option>
+            <option value="OU">Full Hardware Inventory — one site / OU</option>
+            <option value="Computer">Full Hardware Inventory — specific computers</option>
+            <option value="NeverScanned">Full Hardware Inventory — never-scanned devices</option>
+            <option value="Stale">Full Hardware Inventory — devices with stale data</option>
+          </select>
+        </div>
+
+        
+        <div class="form-group extra-field" id="fieldLogs">
+          <label>Collect logs from</label>
+          <select name="logs_target" id="logsTarget" onchange="toggleFields()">
+            <option value="All">All devices in AD</option>
+            <option value="OU">A specific site / OU</option>
+            <option value="Computer">Specific computer name(s)</option>
+          </select>
+        </div>
+
+        <div class="form-group extra-field" id="fieldLogsOU">
+          <label>Site / Organizational Unit</label>
+          <select name="logs_ou_path">
+              <option value="">— Select a site —</option><option value="East Branch / Main">East Branch / Main (9 devices)</option><option value="Head Office / Annex">Head Office / Annex (10 devices)</option><option value="Head Office / Main Building">Head Office / Main Building (11 devices)</option><option value="North Campus / Building A">North Campus / Building A (11 devices)</option><option value="North Campus / Building B">North Campus / Building B (11 devices)</option><option value="West Branch / Main">West Branch / Main (9 devices)</option></select>
+        </div>
+
+        <div class="form-group extra-field" id="fieldLogsComputer">
+          <label>Computer Name(s)</label>
+          <input type="text" name="logs_computer_names" placeholder="PC-0101, PC-0102">
+          <span class="hint">Comma-separated, exact AD computer names.</span>
+        </div>
+
+        <div class="form-group extra-field" id="fieldOU">
+          <label>Site / Organizational Unit</label>
+          <select name="ou_path">
+              <option value="">— Select a site —</option><option value="East Branch / Main">East Branch / Main (9 devices)</option><option value="Head Office / Annex">Head Office / Annex (10 devices)</option><option value="Head Office / Main Building">Head Office / Main Building (11 devices)</option><option value="North Campus / Building A">North Campus / Building A (11 devices)</option><option value="North Campus / Building B">North Campus / Building B (11 devices)</option><option value="West Branch / Main">West Branch / Main (9 devices)</option></select>
+            <span class="hint">6 sites · refreshed 2026-10-29 08:00:00</span>
+        </div>
+
+        <div class="form-group extra-field" id="fieldComputer">
+          <label>Computer Name(s)</label>
+          <input type="text" name="computer_names" placeholder="PC-0101, PC-0102">
+          <span class="hint">Comma-separated, exact AD computer names.</span>
+        </div>
+
+        <div class="form-group extra-field" id="fieldStale">
+          <label>Older Than (days)</label>
+          <input type="number" name="stale_days" value="30" min="1">
+          <span class="hint">Counted from each device's last successful (Online) scan.</span>
+        </div>
+
+        <div class="form-group">
+          <label>&nbsp;</label>
+          <button type="submit" class="btn-launch">Queue Scan</button>
+        </div>
+      </div>
+
+      
+      <div class="scan-desc" id="scanDesc"></div>
+    </form>
+  </div>
+  
+
+  <h2 class="section-title">Recent Scan Jobs</h2>
+  <div class="table-wrap">
+  <table id="jobsTable">
+    <thead>
+      <tr>
+        <th>ID</th><th>Type</th><th>Details</th><th>Status</th><th>Progress</th><th>Results</th><th>Requested</th><th>Log</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr data-job-id="418">
+        <td>#418</td>
+        <td>Stale Data</td>
+        <td>Older than 30 days</td>
+        <td class="js-status"><span class="status-pill" style="background:var(--good)">Completed</span></td>
+        <td>
+          <div class="progress-wrap"><div class="js-progress-fill progress-fill" style="width:100%"></div></div>
+          <span class="js-progress-text counts">61 / 61</span>
+        </td>
+        <td class="counts js-counts">
+          <span style="color:var(--good)">&#9679;</span> 52
+          &nbsp;<span style="color:var(--warn)">&#9679;</span> 7
+          &nbsp;<span style="color:var(--danger)">&#9679;</span> 2
+        </td>
+        <td class="counts">2026-10-29 05:00:00</td>
+        <td><a class="log-link" href="scan_log_view.php?id=418">View Log</a></td>
+      </tr>
+      <tr data-job-id="417">
+        <td>#417</td>
+        <td>Full Inventory (OU)</td>
+        <td>North Campus / Building A</td>
+        <td class="js-status"><span class="status-pill" style="background:var(--good)">Completed</span></td>
+        <td>
+          <div class="progress-wrap"><div class="js-progress-fill progress-fill" style="width:100%"></div></div>
+          <span class="js-progress-text counts">74 / 74</span>
+        </td>
+        <td class="counts js-counts">
+          <span style="color:var(--good)">&#9679;</span> 66
+          &nbsp;<span style="color:var(--warn)">&#9679;</span> 8
+          &nbsp;<span style="color:var(--danger)">&#9679;</span> 0
+        </td>
+        <td class="counts">2026-10-28 10:00:00</td>
+        <td><a class="log-link" href="scan_log_view.php?id=417">View Log</a></td>
+      </tr>
+      <tr data-job-id="416">
+        <td>#416</td>
+        <td>AD Refresh</td>
+        <td>All of Active Directory</td>
+        <td class="js-status"><span class="status-pill" style="background:var(--good)">Completed</span></td>
+        <td>
+          <div class="progress-wrap"><div class="js-progress-fill progress-fill" style="width:100%"></div></div>
+          <span class="js-progress-text counts">1412 / 1412</span>
+        </td>
+        <td class="counts js-counts">
+          <span style="color:var(--good)">&#9679;</span> 1412
+          &nbsp;<span style="color:var(--warn)">&#9679;</span> 0
+          &nbsp;<span style="color:var(--danger)">&#9679;</span> 0
+        </td>
+        <td class="counts">2026-10-28 00:40:00</td>
+        <td><a class="log-link" href="scan_log_view.php?id=416">View Log</a></td>
+      </tr>
+      <tr data-job-id="415">
+        <td>#415</td>
+        <td>Event Logs</td>
+        <td>All devices in AD</td>
+        <td class="js-status"><span class="status-pill" style="background:var(--good)">Completed</span></td>
+        <td>
+          <div class="progress-wrap"><div class="js-progress-fill progress-fill" style="width:100%"></div></div>
+          <span class="js-progress-text counts">640 / 640</span>
+        </td>
+        <td class="counts js-counts">
+          <span style="color:var(--good)">&#9679;</span> 571
+          &nbsp;<span style="color:var(--warn)">&#9679;</span> 66
+          &nbsp;<span style="color:var(--danger)">&#9679;</span> 3
+        </td>
+        <td class="counts">2026-10-27 09:40:00</td>
+        <td><a class="log-link" href="scan_log_view.php?id=415">View Log</a></td>
+      </tr>
+      <tr data-job-id="414">
+        <td>#414</td>
+        <td>Full Inventory</td>
+        <td>Every device in AD</td>
+        <td class="js-status"><span class="status-pill" style="background:var(--good)">Completed</span></td>
+        <td>
+          <div class="progress-wrap"><div class="js-progress-fill progress-fill" style="width:100%"></div></div>
+          <span class="js-progress-text counts">1284 / 1284</span>
+        </td>
+        <td class="counts js-counts">
+          <span style="color:var(--good)">&#9679;</span> 1097
+          &nbsp;<span style="color:var(--warn)">&#9679;</span> 171
+          &nbsp;<span style="color:var(--danger)">&#9679;</span> 16
+        </td>
+        <td class="counts">2026-10-26 08:40:00</td>
+        <td><a class="log-link" href="scan_log_view.php?id=414">View Log</a></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+<footer class="app-footer">Powered by <b>ThomasLab's</b></footer>
+
+<script>
+// =========================================================
+// What each scan actually does
+// =========================================================
+// Written to be read by whoever is about to launch the scan: what it
+// reads, what it writes, roughly what it costs, and - just as
+// importantly - what it deliberately does NOT touch. The three
+// "leaves alone" notes are the ones that used to generate support
+// questions ("why did the full scan not update the health box?",
+// "why did a partial scan not mark anything Removed?").
+const SCAN_DESCRIPTIONS = {
+    All: {
+        title: 'Full Hardware Inventory — every device in Active Directory',
+        body: 'Contacts every device in Active Directory over WMI and rebuilds its complete inventory record: model, serial number, material code, manufacturer and chassis type, CPU, RAM and memory slots, physical disks and partitions, GPU, BIOS, operating system and build, network adapters, the signed-in user and last boot time. Directory data (company OU, site, description and both last-logon values) is refreshed in the same pass, hardware changes are written to the change log, and devices that have left Active Directory are marked <b>Removed</b>.',
+        note: 'The heaviest scan — expect it to run for a while across a large estate. Windows event logs are deliberately excluded; they have their own scan below, which is what keeps this one fast.'
+    },
+    ADOnly: {
+        title: 'Active Directory Refresh — no device contact',
+        body: 'Reads Active Directory only. Refreshes each computer\'s company OU, site, description, operating system, and both last-logon values — the replicated one and the accurate figure checked against every domain controller. It also sweeps every user account in the domain into the Users Dashboard, along with their department, manager, employee ID and account state.',
+        note: 'No ping and no WMI, so it works for devices that are switched off or unreachable, and it finishes in a fraction of the time a hardware scan takes. Hardware fields keep whatever the last full inventory wrote.'
+    },
+    Logs: {
+        title: 'Event Log Collection — device health events',
+        body: 'Reads the last <b>7 days</b> of Critical and Error events from each device\'s System and Application logs and refreshes its health record: blue screens, disk and NTFS errors, unexpected reboots, application crashes, and CPU thermal throttling. This is what feeds the health box on a device report and the event-based rows on the Alerts Dashboard.',
+        note: 'Health data only — inventory, directory and status data are all left exactly as they are, and a device that does not answer is never marked Removed just because its logs could not be read.'
+    },
+    OU: {
+        title: 'Full Hardware Inventory — one site / OU',
+        body: 'Runs exactly the same full inventory as the estate-wide scan, restricted to the devices in the site you select below. Use it after a rollout, a move, or any change that affects one location rather than the whole company.',
+        note: 'Devices outside the selected OU are not contacted and not modified in any way, and nothing is marked Removed — a partial scan is not evidence about devices it never looked at.'
+    },
+    Computer: {
+        title: 'Full Hardware Inventory — specific computers',
+        body: 'Runs the same full inventory against the exact machines you name below. The fastest way to verify a single device after a rebuild, a RAM or disk upgrade, a rename, or a failed entry in an earlier scan.',
+        note: 'Only the named devices are contacted and updated. Nothing is marked Removed.'
+    },
+    NeverScanned: {
+        title: 'Full Hardware Inventory — never-scanned devices',
+        body: 'Finds every device that exists in Active Directory but has no inventory record at all yet, and runs the full hardware inventory against just those. Run it after new machines are joined to the domain to bring them onto the dashboards without re-scanning the entire estate.',
+        note: 'Devices that already have a record are skipped entirely, and nothing is marked Removed.'
+    },
+    Stale: {
+        title: 'Full Hardware Inventory — devices with stale data',
+        body: 'Finds devices still active in Active Directory whose last successful (Online) scan is older than the number of days you set below — or that have never had one — and runs the full hardware inventory against just those. The practical way to keep the estate current without re-scanning everything every night.',
+        note: 'Devices scanned more recently than the cut-off are left untouched, and nothing is marked Removed.'
+    }
+};
+
+// The Logs scan has a second level of choice, so its description gains
+// a line naming the target that was actually picked.
+const LOGS_TARGET_NOTES = {
+    All:      'Target: every device in Active Directory.',
+    OU:       'Target: only the devices in the site selected below.',
+    Computer: 'Target: only the computers named below.'
+};
+
+function setScanDesc(type) {
+    const box = document.getElementById('scanDesc');
+    if (!box) return;
+    const d = SCAN_DESCRIPTIONS[type];
+    if (!d) { box.innerHTML = ''; return; }
+
+    let note = d.note;
+    if (type === 'Logs') {
+        const target = document.getElementById('logsTarget');
+        const extra = target ? LOGS_TARGET_NOTES[target.value] : null;
+        if (extra) { note = extra + ' ' + note; }
+    }
+    box.innerHTML = '<span class="sd-title">' + d.title + '</span>' + d.body +
+                    '<span class="sd-note">' + note + '</span>';
+}
+
+function toggleFields() {
+    const type = document.getElementById('scanType').value;
+    document.querySelectorAll('.extra-field').forEach(el => el.classList.remove('show'));
+    if (type === 'Logs') {
+        document.getElementById('fieldLogs').classList.add('show');
+        // The Logs scan has a second level of choice (All / OU /
+        // Computer), so its own sub-field only appears once that inner
+        // dropdown asks for it.
+        const target = document.getElementById('logsTarget').value;
+        if (target === 'OU') document.getElementById('fieldLogsOU').classList.add('show');
+        if (target === 'Computer') document.getElementById('fieldLogsComputer').classList.add('show');
+    }
+    if (type === 'OU') document.getElementById('fieldOU').classList.add('show');
+    if (type === 'Computer') document.getElementById('fieldComputer').classList.add('show');
+    if (type === 'Stale') document.getElementById('fieldStale').classList.add('show');
+    setScanDesc(type);
+}
+if (document.getElementById('scanType')) toggleFields();
+
+// Poll every 4s for jobs that are still Queued/Running.
+function pollStatus() {
+    const rows = Array.from(document.querySelectorAll('#jobsTable tr[data-job-id]'));
+    const activeIds = rows.filter(r => {
+        const st = r.querySelector('.js-status .status-pill').textContent.trim();
+        return st === 'Queued' || st === 'Running';
+    }).map(r => r.dataset.jobId);
+
+    if (activeIds.length === 0) return;
+
+    fetch('scan_status.php?ids=' + activeIds.join(','))
+        .then(r => r.json())
+        .then(data => {
+            data.forEach(j => {
+                const row = document.querySelector('#jobsTable tr[data-job-id="' + j.id + '"]');
+                if (!row) return;
+                const colors = { Queued:'var(--fg-subtle)', Running:'var(--info)', Completed:'var(--good)', Failed:'var(--danger)' };
+                const pill = row.querySelector('.js-status .status-pill');
+                pill.textContent = j.status;
+                pill.style.background = colors[j.status] || 'var(--fg-subtle)';
+
+                const pct = j.total_targets > 0 ? Math.round((j.completed_targets / j.total_targets) * 100) : 0;
+                row.querySelector('.js-progress-fill').style.width = pct + '%';
+                row.querySelector('.js-progress-text').textContent = j.completed_targets + ' / ' + j.total_targets;
+
+                const dots = row.querySelectorAll('.js-counts')[0];
+                dots.innerHTML = '<span style="color:var(--good)">&#9679;</span> ' + j.online_count +
+                    ' &nbsp;<span style="color:var(--warn)">&#9679;</span> ' + j.offline_count +
+                    ' &nbsp;<span style="color:var(--danger)">&#9679;</span> ' + j.error_count;
+            });
+        })
+        .catch(() => {});
+
+    // If any Job that was Queued/Running is now Completed/Failed and
+    // doesn't yet show a log link, a full page reload picks it up
+    // (kept deliberately simple - this function doesn't patch the Log column).
+}
+setInterval(pollStatus, 4000);
+pollStatus();
+</script>
+</body></html>
